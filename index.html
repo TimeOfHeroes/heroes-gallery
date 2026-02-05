@@ -2,142 +2,537 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>Герои</title>
+<title>Галерея героев — фильтры и карточки</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+:root { color-scheme: light dark; --hdrH: 64px; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#f7f7f7; color:#111; }
+header { position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,.96); backdrop-filter: blur(6px); border-bottom: 1px solid #eaeaea; }
+.bar { display:flex; gap:8px; align-items:center; padding:10px 12px; flex-wrap:wrap; }
+h1 { margin:0; font-size:18px; }
+.grow { flex: 1 1 240px; display:flex; gap:8px; align-items:center; }
+.bar input[type="search"], .bar select, .bar button { font-size:14px; padding:6px 8px; }
+.btn { border:1px solid #ccc; background:#fff; border-radius:8px; cursor:pointer; }
+.btn.primary { background:#0a7; color:#fff; border-color:#0a7; }
+.wrap { display:grid; grid-template-columns: 300px 1fr; gap:16px; padding:16px; }
+@media (max-width: 1024px) { .wrap { grid-template-columns: 1fr; } }
+/* Фильтры: десктоп — колонка; мобайл — выезжающая панель */
+.filters { background:#fff; border:1px solid #e5e5e5; border-radius:12px; }
+.filters .panel { padding:12px; }
+.filters .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.filters h2 { margin:0; font-size:16px; }
+.facet { margin-bottom:14px; }
+.facet h3 { margin:0 0 8px; font-size:14px; color:#333; }
+.opts { max-height:180px; overflow:auto; border:1px solid #eee; border-radius:8px; padding:6px; background:#fafafa; }
+.opt { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:14px; }
+.facet .actions { display:flex; gap:8px; margin-top:6px; }
+.facet .actions .btn { font-size:12px; padding:4px 6px; }
+/* Десктопная прокрутка фильтров, чтобы всё поместилось */
+@media (min-width: 1025px) {
+  .filters { position: sticky; top: calc(var(--hdrH) + 8px); max-height: calc(100vh - var(--hdrH) - 24px); overflow: auto; }
+}
+/* Мобильный оффканвас */
+@media (max-width: 1024px) {
+  .filters { position: fixed; inset: 0; background: rgba(0,0,0,.6); display:none; z-index:20; border:none; }
+  .filters.show { display:block; }
+  .filters .panel { position:absolute; right:0; top:0; bottom:0; width:min(420px, 92vw); overflow:auto; background:#fff; border-radius:12px 0 0 12px; }
+  .filters .head { position: sticky; top:0; background:#fff; padding-top:12px; z-index:1; }
+}
+
+/* Контент и карточки */
+.content { min-height:60vh; }
+#count { margin:0 0 8px; color:#666; font-size:13px; }
+.cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap:16px; }
+.card { border:1px solid #ddd; border-radius:12px; overflow:hidden; background:#fff; display:flex; flex-direction:column; transition: box-shadow .2s; cursor:pointer; }
+.card:hover { box-shadow:0 6px 24px rgba(0,0,0,.08); }
+.thumb { width:100%; aspect-ratio: 4/3; background:#f0f0f0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.thumb img { width:100%; height:100%; object-fit:cover; }
+.card h3 { margin:10px 12px 6px; font-size:18px; }
+.meta { margin:0 12px 6px; color:#555; display:flex; gap:8px; flex-wrap:wrap; font-size:13px; }
+.stats { margin:0 12px 10px; display:flex; gap:8px; flex-wrap:wrap; }
+.pill { background:#f3f3f3; border:1px solid #e6e6e6; border-radius:999px; padding:4px 8px; font-size:12px; }
+
+@media (min-width:1200px){ .cards{ grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); } }
+
+/* Модалка */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 30; }
+.modal.show { display: flex; }
+.dialog { position: relative; background: #fff; color: #111; max-width: 1100px; width: min(1100px, 98vw); max-height: 92vh; overflow: auto; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: grid; grid-template-columns: 1.05fr 1fr; gap: 16px; padding: 14px; }
+.dialog img { width: 100%; height: auto; border-radius: 8px; }
+.dialog h2 { margin: 0 0 8px; font-size:20px; }
+.dialog .meta { display:flex; gap:8px; flex-wrap:wrap; color:#555; margin-bottom:6px; font-size:14px; }
+.dialog .mStats { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+.dialog .mStats .pill { font-size:14px; padding:6px 10px; }
+.pre { white-space: pre-line; background:#fafafa; border:1px solid #eee; border-radius:8px; padding:8px; font-size:14px; }
+.close { position: absolute; top: 8px; right: 8px; border: none; background: #0008; color: #fff; font-size: 20px; line-height: 1; padding: 6px 10px; border-radius: 20px; cursor: pointer; }
+.nav { position: absolute; top: 50%; transform: translateY(-50%); border: none; background: #0008; color: #fff; font-size: 24px; line-height: 1; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.nav.prev { left: 8px; } .nav.next { right: 8px; }
+.all-fields { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+.all-fields table { width:100%; border-collapse: collapse; }
+.all-fields th, .all-fields td { text-align:left; vertical-align: top; padding:6px 8px; border-bottom:1px solid #f0f0f0; font-size:14px; }
+.all-fields th { width: 40%; color:#444; }
+.open-img { margin-top:8px; display:inline-block; font-size:13px; color:#0a5; text-decoration:none; }
+@media (max-width: 860px) { .dialog { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 <header>
+<div class="bar">
 <h1>Герои</h1>
-<div class="filters">
-<input id="q" type="search" placeholder="Поиск по имени/описанию">
-<select id="role"><option value="">Роль: все</option></select>
-<select id="faction"><option value="">Фракция: все</option></select>
-<select id="rarity"><option value="">Редкость: все</option></select>
-<label>ATK от <input id="atkMin" type="number" min="0" style="width:80px"></label>
-<label>до <input id="atkMax" type="number" min="0" style="width:80px"></label>
-<button id="reset">Сбросить</button>
+<div class="grow">
+<input id="q" type="search" class="btn" placeholder="Поиск по имени/способностям">
 </div>
-<div id="count"></div>
+<select id="sortBy" class="btn" title="Поле сортировки">
+<option value="Сила" selected>Сила</option>
+<option value="Атака">Атака</option>
+<option value="Защита">Защита</option>
+<option value="Жизни">Жизни</option>
+<option value="Герой">Имя</option>
+</select>
+<select id="sortDir" class="btn" title="Направление">
+<option value="desc" selected>Убыв.</option>
+<option value="asc">Возр.</option>
+</select>
+<button id="openFilters" class="btn">Фильтры</button>
+<button id="resetAll" class="btn">Сбросить</button>
+</div>
 </header>
 
-<main id="cards" class="cards"></main>
+<div class="wrap">
+<!-- Фильтры (десктоп — колонка; мобайл — оффканвас) -->
+<aside id="filters" class="filters" aria-hidden="true">
+<div class="panel">
+<div class="head">
+<h2>Фильтры</h2>
+<button id="closeFilters" class="btn">Закрыть</button>
+</div>
+<div class="facet" data-facet="element">
+      <h3>Стихия</h3>
+      <div class="opts" id="facet-element"></div>
+      <div class="actions">
+        <button class="btn" data-action="all" data-facet="element">Все</button>
+        <button class="btn" data-action="none" data-facet="element">Снять</button>
+      </div>
+    </div>
+
+    <div class="facet" data-facet="stars">
+      <h3>Количество звезд</h3>
+      <div class="opts" id="facet-stars"></div>
+      <div class="actions">
+        <button class="btn" data-action="all" data-facet="stars">Все</button>
+        <button class="btn" data-action="none" data-facet="stars">Снять</button>
+      </div>
+    </div>
+
+    <div class="facet" data-facet="mana">
+      <h3>Скорость маны</h3>
+      <div class="opts" id="facet-mana"></div>
+      <div class="actions">
+        <button class="btn" data-action="all" data-facet="mana">Все</button>
+        <button class="btn" data-action="none" data-facet="mana">Снять</button>
+      </div>
+    </div>
+
+    <div class="facet" data-facet="attackType">
+      <h3>Способ атаки</h3>
+      <div class="opts" id="facet-attackType"></div>
+      <div class="actions">
+        <button class="btn" data-action="all" data-facet="attackType">Все</button>
+        <button class="btn" data-action="none" data-facet="attackType">Снять</button>
+      </div>
+    </div>
+
+    <div class="facet" data-facet="summon">
+      <h3>Место призыва</h3>
+      <div class="opts" id="facet-summon"></div>
+      <div class="actions">
+        <button class="btn" data-action="all" data-facet="summon">Все</button>
+        <button class="btn" data-action="none" data-facet="summon">Снять</button>
+      </div>
+    </div>
+
+    <div class="facet" data-facet="clazz">
+      <h3>Класс</h3>
+      <div class="opts" id="facet-clazz"></div>
+      <div class="actions">
+        <button class="btn" data-action="all" data-facet="clazz">Все</button>
+        <button class="btn" data-action="none" data-facet="clazz">Снять</button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Контент -->
+<section class="content">
+  <div id="count">Загрузка...</div>
+  <div id="cards" class="cards"></div>
+  <div id="empty" style="display:none; color:#666; padding:24px;">Ничего не найдено. Измените фильтры.</div>
+</section>
+</div>
+
+<!-- Модалка карточки -->
+<div id="modal" class="modal" role="dialog" aria-modal="true">
+<div class="dialog">
+<button id="mClose" class="close" aria-label="Закрыть">×</button>
+<button id="mPrev" class="nav prev" aria-label="Предыдущий">‹</button>
+<button id="mNext" class="nav next" aria-label="Следующий">›</button>
+<div class="left">
+    <img id="mImg" src="" alt="">
+    <a id="mOpenImg" class="open-img" href="#" target="_blank" rel="noopener">Открыть изображение в новой вкладке</a>
+  </div>
+  <div class="right">
+    <h2 id="mName"></h2>
+
+    <div id="mMeta1" class="meta"></div>
+    <div id="mMeta2" class="meta"></div>
+    <!-- Ключевые статы — компактно рядом -->
+    <div id="mStats" class="mStats"></div>
+
+    <h3>Способности</h3>
+    <div id="mAbilities" class="pre"></div>
+
+    <h3>Пассивные способности</h3>
+    <div id="mPassive" class="pre"></div>
+
+    <div class="all-fields">
+      <h3>Все поля</h3>
+      <table id="mAllFields"></table>
+    </div>
+  </div>
+</div>
+</div>
 
 <script>
-const CSV_FILE = 'heroes.csv'; // ваш экспорт из Baserow
+// Имена колонок (точно как в CSV)
+const F = {
+id: 'id',
+name: 'Герой',
+element: 'Стихия',
+stars: 'Количество звезд', // если в CSV «звёзд» — замените строку
+mana: 'Скорость маны',
+power: 'Сила',
+attack: 'Атака',
+defense: 'Защита',
+hp: 'Жизни',
+attackType: 'Способ атаки',
+abilities: 'Способности',
+passive: 'Пассивные способности',
+summon: 'Место призыва',
+clazz: 'Класс',
+image: 'Картинка'
+};
+const DATA_URL = 'heroes.csv?ts=' + Date.now();
 
-text
-let data = [];
-let filtered = [];
+const els = {
+  q: document.getElementById('q'),
+  sortBy: document.getElementById('sortBy'),
+  sortDir: document.getElementById('sortDir'),
+  resetAll: document.getElementById('resetAll'),
+  openFilters: document.getElementById('openFilters'),
+  closeFilters: document.getElementById('closeFilters'),
+  filters: document.getElementById('filters'),
+  count: document.getElementById('count'),
+  cards: document.getElementById('cards'),
+  empty: document.getElementById('empty'),
+  facet: {
+    element: document.getElementById('facet-element'),
+    stars: document.getElementById('facet-stars'),
+    mana: document.getElementById('facet-mana'),
+    attackType: document.getElementById('facet-attackType'),
+    summon: document.getElementById('facet-summon'),
+    clazz: document.getElementById('facet-clazz'),
+  },
+  modal: document.getElementById('modal'),
+  mClose: document.getElementById('mClose'),
+  mPrev: document.getElementById('mPrev'),
+  mNext: document.getElementById('mNext'),
+  mImg: document.getElementById('mImg'),
+  mOpenImg: document.getElementById('mOpenImg'),
+  mName: document.getElementById('mName'),
+  mMeta1: document.getElementById('mMeta1'),
+  mMeta2: document.getElementById('mMeta2'),
+  mStats: document.getElementById('mStats'),
+  mAbilities: document.getElementById('mAbilities'),
+  mPassive: document.getElementById('mPassive'),
+  mAllFields: document.getElementById('mAllFields'),
+};
 
-function uniqueSorted(arr) {
-  return [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ru'));
+let allRows = [];
+let viewRows = [];
+let currentIdx = -1;
+
+const selected = {
+  element: new Set(),
+  stars: new Set(),
+  mana: new Set(),
+  attackType: new Set(),
+  summon: new Set(),
+  clazz: new Set(),
+};
+
+function toNum(v){ const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? n : null; }
+function uniq(values){ return [...new Set(values.filter(v => v!==undefined && v!==null && String(v).trim()!==''))]; }
+function sortAlpha(a,b){ return String(a).localeCompare(String(b), 'ru', {numeric:true}); }
+function sortNumericAsc(a,b){ const na=toNum(a), nb=toNum(b); return (na??Infinity) - (nb??Infinity); }
+
+function fileCellToUrl(v){
+  if (!v) return '';
+  const s = String(v).trim();
+  const mParen = s.match(/\((https?:\/\/[^)]+)\)/i);
+  if (mParen) return mParen[1];
+  const mAny = s.match(/https?:\/\/\S+/i);
+  if (mAny) return mAny[0].replace(/[),]+$/,'');
+  try {
+    const arr = JSON.parse(s);
+    if (Array.isArray(arr) && arr.length && arr[0].url) return arr[0].url;
+  } catch(e){}
+  return '';
 }
 
-function populateSelect(id, values) {
-  const sel = document.getElementById(id);
-  const current = sel.value;
-  sel.innerHTML = '<option value="">Все</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
-  if (values.includes(current)) sel.value = current;
-}
-
-function readNumber(id) {
-  const v = document.getElementById(id).value.trim();
-  return v === '' ? null : Number(v);
-}
-
-function applyFilters() {
-  const q = document.getElementById('q').value.trim().toLowerCase();
-  const role = document.getElementById('role').value;
-  const faction = document.getElementById('faction').value;
-  const rarity = document.getElementById('rarity').value;
-  const atkMin = readNumber('atkMin');
-  const atkMax = readNumber('atkMax');
-
-  filtered = data.filter(h => {
-    const matchQ = !q || (String(h.Name||'').toLowerCase().includes(q) || String(h.Skills||'').toLowerCase().includes(q));
-    const matchRole = !role || String(h.Role) === role;
-    const matchFaction = !faction || String(h.Faction) === faction;
-    const matchRarity = !rarity || String(h.Rarity) === rarity;
-    const atk = Number(h.Attack||0);
-    const matchAtkMin = atkMin==null || atk >= atkMin;
-    const matchAtkMax = atkMax==null || atk <= atkMax;
-    return matchQ && matchRole && matchFaction && matchRarity && matchAtkMin && matchAtkMax;
+function buildFacet(container, values, facetKey){
+  const opts = uniq(values);
+  if (facetKey === 'stars') opts.sort(sortNumericAsc); else opts.sort(sortAlpha);
+  container.innerHTML = opts.map(val => {
+    const checked = selected[facetKey].size ? (selected[facetKey].has(String(val)) ? 'checked' : '') : '';
+    return `<label class="opt"><input type="checkbox" data-facet="${facetKey}" value="${String(val).replace(/"/g,'&quot;')}" ${checked}><span>${String(val)}</span></label>`;
+  }).join('');
+  container.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const set = selected[facetKey];
+      if (cb.checked) set.add(cb.value); else set.delete(cb.value);
+      applyFilters();
+    });
   });
-
-  // Пересчитываем варианты (фасеты) под активные фильтры, кроме текущего фильтра
-  populateSelect('role', uniqueSorted(filtered.map(h => h.Role)));
-  populateSelect('faction', uniqueSorted(filtered.map(h => h.Faction)));
-  populateSelect('rarity', uniqueSorted(filtered.map(h => h.Rarity)));
-
-  renderCards(filtered);
-  document.getElementById('count').textContent = `Найдено: ${filtered.length}`;
+}
+function initAllFacets(rows){
+  buildFacet(els.facet.element, rows.map(r=>r[F.element]), 'element');
+  buildFacet(els.facet.stars,   rows.map(r=>r[F.stars]),   'stars');
+  buildFacet(els.facet.mana,    rows.map(r=>r[F.mana]),    'mana');
+  buildFacet(els.facet.attackType, rows.map(r=>r[F.attackType]), 'attackType');
+  buildFacet(els.facet.summon,  rows.map(r=>r[F.summon]),  'summon');
+  buildFacet(els.facet.clazz,   rows.map(r=>r[F.clazz]),   'clazz');
+}
+function selectAll(facetKey){
+  const values = uniq(allRows.map(r=>{
+    switch(facetKey){
+      case 'element': return r[F.element];
+      case 'stars': return r[F.stars];
+      case 'mana': return r[F.mana];
+      case 'attackType': return r[F.attackType];
+      case 'summon': return r[F.summon];
+      case 'clazz': return r[F.clazz];
+    }
+  }));
+  selected[facetKey] = new Set(values.map(String));
+  initAllFacets(allRows);
+  applyFilters();
+}
+function selectNone(facetKey){
+  selected[facetKey].clear();
+  initAllFacets(allRows);
+  applyFilters();
 }
 
-function renderCards(list) {
-  const root = document.getElementById('cards');
-  root.innerHTML = list.map(h => {
-    const img = h.ImageURL || h.Image || '';
+function renderCards(rows){
+  if (!rows.length){
+    els.cards.innerHTML = '';
+    els.empty.style.display = 'block';
+    return;
+  }
+  els.empty.style.display = 'none';
+  els.cards.innerHTML = rows.map((r, i)=>{
+    const img = fileCellToUrl(r[F.image]);
+    const abilitiesOneLine = String(r[F.abilities]||'').split(/\r?\n/).filter(Boolean)[0] || '';
     return `
-      <article class="card">
-        <div class="thumb">${img ? `<img src="${img}" alt="${h.Name||''}">` : ''}</div>
-        <h3>${h.Name||''}</h3>
+      <article class="card" data-idx="${i}">
+        <div class="thumb">${img ? `<img src="${img}" alt="${r[F.name]||''}">` : ''}</div>
+        <h3>${r[F.name]||''}</h3>
         <div class="meta">
-          <span>${h.Role||''}</span> •
-          <span>${h.Faction||''}</span> •
-          <span>${h.Rarity||''}</span>
+          <span>${r[F.element]||''}</span> •
+          <span>${r[F.stars]||''}★</span> •
+          <span>${r[F.mana]||''}</span>
+        </div>
+        <div class="meta">
+          <span>${r[F.attackType]||''}</span> •
+          <span>${r[F.summon]||''}</span> •
+          <span>${r[F.clazz]||''}</span>
         </div>
         <div class="stats">
-          <span>ATK: ${h.Attack||''}</span>
-          <span>DEF: ${h.Defense||''}</span>
-          <span>HP: ${h.HP||''}</span>
+          <span class="pill">Сила: ${r[F.power]||''}</span>
+          <span class="pill">АТК: ${r[F.attack]||''}</span>
+          <span class="pill">ЗАЩ: ${r[F.defense]||''}</span>
+          <span class="pill">HP: ${r[F.hp]||''}</span>
         </div>
-        ${h.Skills ? `<p class="desc">${h.Skills}</p>` : ''}
+        ${abilitiesOneLine ? `<div class="meta" title="${String(r[F.abilities]).replace(/"/g,'&quot;')}">${abilitiesOneLine}</div>` : ''}
       </article>
     `;
   }).join('');
 }
 
-function initFiltersFromData(all) {
-  populateSelect('role', uniqueSorted(all.map(h => h.Role)));
-  populateSelect('faction', uniqueSorted(all.map(h => h.Faction)));
-  populateSelect('rarity', uniqueSorted(all.map(h => h.Rarity)));
+function fillModal(h){
+  const img = fileCellToUrl(h[F.image]);
+  els.mImg.src = img || '';
+  els.mImg.alt = h[F.name] || '';
+  els.mOpenImg.href = img || '#';
+  els.mOpenImg.style.display = img ? 'inline-block' : 'none';
 
-  // Предзаполним границы ATK
-  const nums = all.map(h => Number(h.Attack||0)).filter(n => !isNaN(n));
-  if (nums.length) {
-    document.getElementById('atkMin').placeholder = Math.min(...nums);
-    document.getElementById('atkMax').placeholder = Math.max(...nums);
-  }
+  els.mName.textContent = h[F.name] || '';
+  els.mMeta1.innerHTML = `
+    <span>${h[F.element]||''}</span>
+    <span>${(h[F.stars]||'') ? (h[F.stars]+'★') : ''}</span>
+    <span>${h[F.mana]||''}</span>
+  `;
+  els.mMeta2.innerHTML = `
+    <span>${h[F.attackType]||''}</span>
+    <span>${h[F.summon]||''}</span>
+    <span>${h[F.clazz]||''}</span>
+  `;
+  els.mStats.innerHTML = `
+    <span class="pill">Сила: ${h[F.power]||''}</span>
+    <span class="pill">АТК: ${h[F.attack]||''}</span>
+    <span class="pill">ЗАЩ: ${h[F.defense]||''}</span>
+    <span class="pill">HP: ${h[F.hp]||''}</span>
+  `;
+  els.mAbilities.textContent = h[F.abilities] || '—';
+  els.mPassive.textContent = h[F.passive] || '—';
+
+  const order = [
+    ['ID', F.id],
+    ['Герой', F.name],
+    ['Стихия', F.element],
+    ['Количество звезд', F.stars],
+    ['Скорость маны', F.mana],
+    ['Сила', F.power],
+    ['Атака', F.attack],
+    ['Защита', F.defense],
+    ['Жизни', F.hp],
+    ['Способ атаки', F.attackType],
+    ['Способности', F.abilities],
+    ['Пассивные способности', F.passive],
+    ['Место призыва', F.summon],
+    ['Класс', F.clazz],
+    ['Картинка (URL)', F.image],
+  ];
+  els.mAllFields.innerHTML = order.map(([label, key])=>{
+    let val = h[key];
+    if (key === F.image) val = fileCellToUrl(val) || '';
+    return `<tr><th>${label}</th><td>${val ? String(val).replace(/\n/g,'<br>') : '—'}</td></tr>`;
+  }).join('');
+}
+function openModal(idx){
+  if (!viewRows.length) return;
+  currentIdx = idx;
+  fillModal(viewRows[currentIdx]);
+  els.modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){
+  els.modal.classList.remove('show');
+  document.body.style.overflow = '';
+  currentIdx = -1;
+}
+function go(delta){
+  if (currentIdx < 0 || !viewRows.length) return;
+  currentIdx = (currentIdx + delta + viewRows.length) % viewRows.length;
+  fillModal(viewRows[currentIdx]);
 }
 
-function attachListeners() {
-  ['q','role','faction','rarity','atkMin','atkMax'].forEach(id => {
-    document.getElementById(id).addEventListener('input', applyFilters);
-    document.getElementById(id).addEventListener('change', applyFilters);
+function applyFilters(){
+  const q = els.q.value.trim().toLowerCase();
+  viewRows = allRows.filter(r=>{
+    const tName = String(r[F.name]||'').toLowerCase();
+    const tAbil = String(r[F.abilities]||'').toLowerCase();
+    const passQ = !q || tName.includes(q) || tAbil.includes(q);
+    const passElem   = selected.element.size===0   || selected.element.has(String(r[F.element]));
+    const passStars  = selected.stars.size===0     || selected.stars.has(String(r[F.stars]));
+    const passMana   = selected.mana.size===0      || selected.mana.has(String(r[F.mana]));
+    const passAtkT   = selected.attackType.size===0|| selected.attackType.has(String(r[F.attackType]));
+    const passSummon = selected.summon.size===0    || selected.summon.has(String(r[F.summon]));
+    const passClazz  = selected.clazz.size===0     || selected.clazz.has(String(r[F.clazz]));
+    return passQ && passElem && passStars && passMana && passAtkT && passSummon && passClazz;
   });
-  document.getElementById('reset').addEventListener('click', () => {
-    document.getElementById('q').value = '';
-    document.getElementById('role').value = '';
-    document.getElementById('faction').value = '';
-    document.getElementById('rarity').value = '';
-    document.getElementById('atkMin').value = '';
-    document.getElementById('atkMax').value = '';
+
+  const by = els.sortBy.value;
+  const dir = els.sortDir.value;
+  viewRows.sort((a,b)=>{
+    const av = a[by], bv = b[by];
+    const an = toNum(av), bn = toNum(bv);
+    let cmp;
+    if (an!=null && bn!=null) cmp = an - bn;
+    else cmp = String(av||'').localeCompare(String(bv||''), 'ru', {numeric:true});
+    return dir==='asc' ? cmp : -cmp;
+  });
+
+  els.count.textContent = `Найдено: ${viewRows.length}`;
+  renderCards(viewRows);
+}
+
+function attachEvents(){
+  [els.q, els.sortBy, els.sortDir].forEach(el=>{
+    el.addEventListener('input', applyFilters);
+    el.addEventListener('change', applyFilters);
+  });
+  document.querySelectorAll('.facet .actions button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const facetKey = btn.dataset.facet;
+      if (btn.dataset.action === 'all') selectAll(facetKey);
+      else selectNone(facetKey);
+    });
+  });
+  els.resetAll.addEventListener('click', ()=>{
+    els.q.value = '';
+    els.sortBy.value = 'Сила';
+    els.sortDir.value = 'desc';
+    Object.keys(selected).forEach(k => selected[k].clear());
+    initAllFacets(allRows);
     applyFilters();
+  });
+  els.cards.addEventListener('click', (e)=>{
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const idx = Number(card.dataset.idx);
+    if (Number.isFinite(idx)) openModal(idx);
+  });
+  els.mClose.addEventListener('click', closeModal);
+  els.mPrev.addEventListener('click', ()=>go(-1));
+  els.mNext.addEventListener('click', ()=>go(1));
+  els.modal.addEventListener('click', (e)=>{ if (e.target === els.modal) closeModal(); });
+  window.addEventListener('keydown', (e)=>{
+    if (!els.modal.classList.contains('show')) return;
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'ArrowLeft') go(-1);
+    if (e.key === 'ArrowRight') go(1);
+  });
+  // Открыть/закрыть фильтры (мобайл)
+  els.openFilters.addEventListener('click', ()=>{
+    els.filters.classList.add('show'); els.filters.setAttribute('aria-hidden','false');
+  });
+  els.closeFilters.addEventListener('click', ()=>{
+    els.filters.classList.remove('show'); els.filters.setAttribute('aria-hidden','true');
+  });
+  // Клик по затемнению закрывает (только вне панели)
+  els.filters.addEventListener('click', (e)=>{
+    if (window.matchMedia('(max-width: 1024px)').matches) {
+      const panel = e.target.closest('.panel');
+      if (!panel) { els.filters.classList.remove('show'); els.filters.setAttribute('aria-hidden','true'); }
+    }
   });
 }
 
-Papa.parse(CSV_FILE, {
-  download: true,
-  header: true,
-  skipEmptyLines: true,
-  complete: (res) => {
-    data = res.data;
-    initFiltersFromData(data);
-    attachListeners();
+Papa.parse(DATA_URL, {
+  download:true,
+  header:true,
+  skipEmptyLines:true,
+  complete: (res)=>{
+    allRows = res.data || [];
+    if (!allRows.length){ els.count.textContent = 'Данные не найдены. Проверьте heroes.csv'; return; }
+    initAllFacets(allRows);
+    attachEvents();
     applyFilters();
-  }
+  },
+  error: (e)=> { console.error('Ошибка CSV:', e); els.count.textContent = 'Ошибка загрузки CSV.'; }
 });
 </script>
 </body>
