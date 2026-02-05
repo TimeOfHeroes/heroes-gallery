@@ -87,11 +87,9 @@ h1 {
   border-color: #098;
 }
 
-/* Основная сетка */
+/* Основная сетка - ИСПРАВЛЕНА */
 .wrap { 
-  display:grid; 
-  grid-template-columns: 300px 1fr; 
-  gap:24px; 
+  display:block; 
   padding:20px; 
   min-height: calc(100vh - var(--hdrH));
   max-width: 1400px;
@@ -99,9 +97,7 @@ h1 {
 }
 @media (max-width: 1024px) { 
   .wrap { 
-    grid-template-columns: 1fr; 
     padding: 16px;
-    gap: 16px;
     min-height: auto;
   } 
 }
@@ -112,6 +108,7 @@ h1 {
   border:1px solid #e5e5e5; 
   border-radius:12px;
   box-shadow: 0 2px 10px rgba(0,0,0,.05);
+  width: 320px;
 }
 .filters .panel { 
   padding:16px; 
@@ -178,7 +175,7 @@ h1 {
   padding:6px 10px; 
 }
 
-/* Десктопная прокрутка фильтров - СКРЫТА ПО УМОЛЧАНИЮ */
+/* Десктопная панель фильтров - СКРЫТА ПО УМОЛЧАНИЮ */
 @media (min-width: 1025px) {
   .filters { 
     position: fixed;
@@ -243,53 +240,71 @@ h1 {
 /* Контент и карточки */
 .content { 
   min-height:60vh; 
+  width: 100%;
 }
 #count { 
-  margin:0 0 12px; 
+  margin:0 0 20px; 
   color:#666; 
-  font-size:14px;
+  font-size:15px;
   padding: 8px 0;
+  font-weight: 500;
 }
 
-/* Адаптивная сетка карточек - 3-4 в ряд на мобильных */
+/* Адаптивная сетка карточек - ИСПРАВЛЕНА ДЛЯ ДЕСКТОПА */
 .cards { 
   display:grid; 
-  grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); 
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
   gap:20px; 
   width: 100%;
 }
 
+/* Десктоп - больше карточек в ряд */
+@media (min-width: 1025px) {
+  .cards { 
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+    gap:20px;
+  }
+}
+
+/* Большие экраны */
 @media (min-width: 1400px) {
   .cards { 
-    grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); 
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+  }
+}
+
+@media (max-width: 1024px) {
+  .cards { 
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+    gap:16px;
   }
 }
 
 @media (max-width: 768px) {
   .cards { 
-    grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); 
-    gap:16px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    gap:14px;
   }
 }
 
 @media (max-width: 640px) {
   .cards { 
-    grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); 
-    gap:14px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+    gap:12px;
   }
 }
 
 @media (max-width: 480px) {
   .cards { 
-    grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); 
-    gap:12px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+    gap:10px;
   }
 }
 
 @media (max-width: 360px) {
   .cards { 
-    grid-template-columns: repeat(auto-fill, minmax(110px,1fr)); 
-    gap:10px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    gap:8px;
   }
 }
 
@@ -793,6 +808,18 @@ h1 {
     font-size: 20px;
   }
 }
+
+/* Подложка при открытых фильтрах на десктопе */
+@media (min-width: 1025px) {
+  .filters.show ~ .wrap::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 98;
+    pointer-events: none;
+  }
+}
 </style>
 </head>
 <body>
@@ -818,7 +845,6 @@ h1 {
 </div>
 </header>
 
-<div class="wrap">
 <!-- Фильтры (скрытая панель на всех устройствах) -->
 <aside id="filters" class="filters" aria-hidden="true">
 <div class="panel">
@@ -882,6 +908,7 @@ h1 {
   </div>
 </aside>
 
+<div class="wrap">
 <!-- Контент -->
 <section class="content">
   <div id="count">Загрузка...</div>
