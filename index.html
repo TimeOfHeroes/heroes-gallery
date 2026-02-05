@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Герои</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+<header>
+<h1>Герои</h1>
+<div class="filters">
+<input id="q" type="search" placeholder="Поиск по имени/описанию">
+<select id="role"><option value="">Роль: все</option></select>
+<select id="faction"><option value="">Фракция: все</option></select>
+<select id="rarity"><option value="">Редкость: все</option></select>
+<label>ATK от <input id="atkMin" type="number" min="0" style="width:80px"></label>
+<label>до <input id="atkMax" type="number" min="0" style="width:80px"></label>
+<button id="reset">Сбросить</button>
+</div>
+<div id="count"></div>
+</header>
+
+<main id="cards" class="cards"></main>
+
+<script>
+const CSV_FILE = 'heroes.csv'; // ваш экспорт из Baserow
+
+text
+let data = [];
+let filtered = [];
+
+function uniqueSorted(arr) {
+  return [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ru'));
+}
+
+function populateSelect(id, values) {
+  const sel = document.getElementById(id);
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Все</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
+  if (values.includes(current)) sel.value = current;
+}
+
+function readNumber(id) {
+  const v = document.getElementById(id).value.trim();
+  return v === '' ? null : Number(v);
+}
+
+function applyFilters() {
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const role = document.getElementById('role').value;
+  const faction = document.getElementById('faction').value;
+  const rarity = document.getElementById('rarity').value;
+  const atkMin = readNumber('atkMin');
+  const atkMax = readNumber('atkMax');
+
+  filtered = data.filter(h => {
+    const matchQ = !q || (String(h.Name||'').toLowerCase().includes(q) || String(h.Skills||'').toLowerCase().includes(q));
+    const matchRole = !role || String(h.Role) === role;
+    const matchFaction = !faction || String(h.Faction) === faction;
+    const matchRarity = !rarity || String(h.Rarity) === rarity;
+    const atk = Number(h.Attack||0);
+    const matchAtkMin = atkMin==null || atk >= atkMin;
+    const matchAtkMax = atkMax==null || atk <= atkMax;
+    return matchQ && matchRole && matchFaction && matchRarity && matchAtkMin && matchAtkMax;
+  });
+
+  // Пересчитываем варианты (фасеты) под активные фильтры, кроме текущего фильтра
+  populateSelect('role', uniqueSorted(filtered.map(h => h.Role)));
+  populateSelect('faction', uniqueSorted(filtered.map(h => h.Faction)));
+  populateSelect('rarity', uniqueSorted(filtered.map(h => h.Rarity)));
+
+  renderCards(filtered);
+  document.getElementById('count').textContent = `Найдено: ${filtered.length}`;
+}
+
+function renderCards(list) {
+  const root = document.getElementById('cards');
+  root.innerHTML = list.map(h => {
+    const img = h.ImageURL || h.Image || '';
+    return `
+      <article class="card">
+        <div class="thumb">${img ? `<img src="${img}" alt="${h.Name||''}">` : ''}</div>
+        <h3>${h.Name||''}</h3>
+        <div class="meta">
+          <span>${h.Role||''}</span> •
+          <span>${h.Faction||''}</span> •
+          <span>${h.Rarity||''}</span>
+        </div>
+        <div class="stats">
+          <span>ATK: ${h.Attack||''}</span>
+          <span>DEF: ${h.Defense||''}</span>
+          <span>HP: ${h.HP||''}</span>
+        </div>
+        ${h.Skills ? `<p class="desc">${h.Skills}</p>` : ''}
+      </article>
+    `;
+  }).join('');
+}
+
+function initFiltersFromData(all) {
+  populateSelect('role', uniqueSorted(all.map(h => h.Role)));
+  populateSelect('faction', uniqueSorted(all.map(h => h.Faction)));
+  populateSelect('rarity', uniqueSorted(all.map(h => h.Rarity)));
+
+  // Предзаполним границы ATK
+  const nums = all.map(h => Number(h.Attack||0)).filter(n => !isNaN(n));
+  if (nums.length) {
+    document.getElementById('atkMin').placeholder = Math.min(...nums);
+    document.getElementById('atkMax').placeholder = Math.max(...nums);
+  }
+}
+
+function attachListeners() {
+  ['q','role','faction','rarity','atkMin','atkMax'].forEach(id => {
+    document.getElementById(id).addEventListener('input', applyFilters);
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+  document.getElementById('reset').addEventListener('click', () => {
+    document.getElementById('q').value = '';
+    document.getElementById('role').value = '';
+    document.getElementById('faction').value = '';
+    document.getElementById('rarity').value = '';
+    document.getElementById('atkMin').value = '';
+    document.getElementById('atkMax').value = '';
+    applyFilters();
+  });
+}
+
+Papa.parse(CSV_FILE, {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: (res) => {
+    data = res.data;
+    initFiltersFromData(data);
+    attachListeners();
+    applyFilters();
+  }
+});
+</script>
+</body>
+</html>
