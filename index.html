@@ -87,7 +87,7 @@ h1 {
   border-color: #098;
 }
 
-/* Основная сетка - ИСПРАВЛЕНА */
+/* Основная сетка */
 .wrap { 
   display:block; 
   padding:20px; 
@@ -102,7 +102,7 @@ h1 {
   } 
 }
 
-/* Фильтры */
+/* Фильтры - ИСПРАВЛЕНЫ ЦВЕТА */
 .filters { 
   background:#fff; 
   border:1px solid #e5e5e5; 
@@ -112,6 +112,7 @@ h1 {
 }
 .filters .panel { 
   padding:16px; 
+  background: #fff; /* Добавлено: белый фон для всей панели */
 }
 .filters .head { 
   display:flex; 
@@ -120,6 +121,7 @@ h1 {
   margin-bottom:16px;
   padding-bottom: 12px;
   border-bottom: 1px solid #eee;
+  background: #fff; /* Добавлено: белый фон для заголовка */
 }
 .filters h2 { 
   margin:0; 
@@ -129,12 +131,16 @@ h1 {
 }
 .facet { 
   margin-bottom:20px; 
+  background: #fff; /* Добавлено: белый фон для каждого фильтра */
+  padding: 0; /* Убраны отступы, которые могли создавать серый фон */
 }
 .facet h3 { 
   margin:0 0 10px; 
   font-size:15px; 
   color:#333;
   font-weight: 500;
+  background: #fff; /* Добавлено: белый фон для заголовков */
+  padding: 0; /* Убраны отступы */
 }
 .opts { 
   max-height:200px; 
@@ -155,6 +161,7 @@ h1 {
   padding: 4px 6px;
   border-radius: 4px;
   transition: background 0.2s;
+  background: transparent; /* Явно указан прозрачный фон */
 }
 .opt:hover {
   background: #f0f0f0;
@@ -169,13 +176,14 @@ h1 {
   display:flex; 
   gap:8px; 
   margin-top:10px; 
+  background: #fff; /* Добавлено: белый фон для кнопок */
 }
 .facet .actions .btn { 
   font-size:13px; 
   padding:6px 10px; 
 }
 
-/* Десктопная панель фильтров - СКРЫТА ПО УМОЛЧАНИЮ */
+/* Десктопная панель фильтров */
 @media (min-width: 1025px) {
   .filters { 
     position: fixed;
@@ -190,6 +198,7 @@ h1 {
     box-shadow: 2px 0 15px rgba(0,0,0,.1);
     transform: translateX(-100%);
     transition: transform 0.3s ease;
+    background: #fff; /* Добавлено: явный белый фон */
   }
   .filters.show {
     transform: translateX(0);
@@ -199,7 +208,7 @@ h1 {
   }
 }
 
-/* Мобильный оффканвас */
+/* Мобильный оффканвас - ИСПРАВЛЕНЫ ГРАНИЦЫ */
 @media (max-width: 1024px) {
   .filters { 
     position: fixed; 
@@ -209,6 +218,9 @@ h1 {
     z-index:1000; 
     border:none; 
     padding: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
   }
   .filters.show { 
     display:block; 
@@ -218,11 +230,15 @@ h1 {
     right:0; 
     top:0; 
     bottom:0; 
-    width:min(420px, 92vw); 
+    width: min(380px, 90vw); /* Уменьшена максимальная ширина */
+    max-width: 90vw; /* Ограничена ширина */
     overflow:auto; 
     background:#fff; 
     border-radius:12px 0 0 12px;
     padding: 20px;
+    box-sizing: border-box;
+    margin: 0;
+    box-shadow: -2px 0 15px rgba(0,0,0,.1);
   }
   .filters .head { 
     position: sticky; 
@@ -231,9 +247,19 @@ h1 {
     padding-top:12px; 
     z-index:1;
     padding-bottom: 12px;
+    margin: 0;
   }
   #openFilters { 
     display: inline-block; 
+  }
+}
+
+/* Дополнительные исправления для очень маленьких экранов */
+@media (max-width: 380px) {
+  .filters .panel {
+    width: 95vw;
+    max-width: 95vw;
+    padding: 16px;
   }
 }
 
@@ -250,7 +276,7 @@ h1 {
   font-weight: 500;
 }
 
-/* Адаптивная сетка карточек - ИСПРАВЛЕНА ДЛЯ ДЕСКТОПА */
+/* Адаптивная сетка карточек */
 .cards { 
   display:grid; 
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
@@ -399,7 +425,7 @@ h1 {
   font-weight: 500;
 }
 
-/* Модалка - ИСПРАВЛЕНА */
+/* Модалка */
 .modal { 
   position: fixed; 
   inset: 0; 
