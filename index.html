@@ -355,18 +355,6 @@ h1 {
   font-weight: 600;
   margin-bottom: 8px;
 }
-.apply-filters-mobile {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--filter-bg);
-  padding: 12px 16px;
-  border-top: 1px solid var(--border-color);
-  z-index: 1001;
-  box-shadow: 0 -2px 10px rgba(0,0,0,.1);
-}
 
 /* Десктопная панель фильтров */
 @media (min-width: 1025px) {
@@ -442,12 +430,11 @@ h1 {
     padding-bottom: 12px;
     margin: 0;
   }
-  .apply-filters-mobile {
-    display: flex;
-    flex-shrink: 0;
-  }
   .apply-filters-container {
-    display: none;
+    display: block;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
   }
   #openFilters { 
     display: inline-block; 
@@ -1071,9 +1058,6 @@ h1 {
     max-width: 95vw;
     padding: 16px;
   }
-  .apply-filters-mobile {
-    padding: 10px 12px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1193,14 +1177,10 @@ h1 {
       </div>
     </div>
     
+    <!-- Кнопка Применить для всех устройств -->
     <div class="apply-filters-container">
-      <button id="applyFilters" class="btn primary apply-filters-btn">Применить фильтры</button>
+      <button id="applyFiltersMobileBtn" class="btn primary apply-filters-btn">Применить фильтры</button>
     </div>
-  </div>
-  
-  <!-- Отдельная кнопка Применить для мобильных -->
-  <div id="applyFiltersMobile" class="apply-filters-mobile">
-    <button id="applyFiltersMobileBtn" class="btn primary apply-filters-btn" style="width: 100%;">Применить фильтры</button>
   </div>
 </aside>
 
@@ -1290,7 +1270,6 @@ const els = {
   resetAll: document.getElementById('resetAll'),
   openFilters: document.getElementById('openFilters'),
   closeFilters: document.getElementById('closeFilters'),
-  applyFilters: document.getElementById('applyFilters'),
   applyFiltersMobileBtn: document.getElementById('applyFiltersMobileBtn'),
   heroSelectToggle: document.getElementById('heroSelectToggle'),
   heroSelectText: document.getElementById('heroSelectText'),
@@ -1690,15 +1669,7 @@ function attachEvents(){
     applyFilters();
   });
   
-  // Кнопка "Применить" в фильтрах (десктоп)
-  els.applyFilters.addEventListener('click', () => {
-    applyFilters();
-    els.filters.classList.remove('show');
-    els.filters.setAttribute('aria-hidden','true');
-    document.body.style.overflow = '';
-  });
-  
-  // Кнопка "Применить" в фильтрах (мобильная)
+  // Кнопка "Применить" в фильтрах (для всех устройств)
   els.applyFiltersMobileBtn.addEventListener('click', () => {
     applyFilters();
     els.filters.classList.remove('show');
