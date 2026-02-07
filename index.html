@@ -355,6 +355,9 @@ h1 {
   font-weight: 600;
   margin-bottom: 8px;
 }
+.apply-filters-mobile {
+  display: none;
+}
 
 /* Десктопная панель фильтров */
 @media (min-width: 1025px) {
@@ -431,10 +434,11 @@ h1 {
     margin: 0;
   }
   .apply-filters-container {
+    display: none;
+  }
+  .apply-filters-mobile {
     display: block;
-    margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
+    margin-top: 20px;
   }
   #openFilters { 
     display: inline-block; 
@@ -1121,7 +1125,10 @@ h1 {
 <div class="panel">
 <div class="head">
 <h2>Фильтры</h2>
-<button id="closeFilters" class="btn">Закрыть</button>
+<div style="display: flex; gap: 8px;">
+  <button id="applyFiltersMobileBtn" class="btn primary" style="flex: 1;">Применить</button>
+  <button id="closeFilters" class="btn">Закрыть</button>
+</div>
 </div>
 <div class="facet" data-facet="element">
       <h3>Стихия</h3>
@@ -1175,11 +1182,6 @@ h1 {
         <button class="btn" data-action="all" data-facet="clazz">Все</button>
         <button class="btn" data-action="none" data-facet="clazz">Снять</button>
       </div>
-    </div>
-    
-    <!-- Кнопка Применить для всех устройств -->
-    <div class="apply-filters-container">
-      <button id="applyFiltersMobileBtn" class="btn primary apply-filters-btn">Применить фильтры</button>
     </div>
   </div>
 </aside>
@@ -1669,7 +1671,7 @@ function attachEvents(){
     applyFilters();
   });
   
-  // Кнопка "Применить" в фильтрах (для всех устройств)
+  // Кнопка "Применить" в фильтрах (для мобильных устройств)
   els.applyFiltersMobileBtn.addEventListener('click', () => {
     applyFilters();
     els.filters.classList.remove('show');
