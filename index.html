@@ -18,6 +18,8 @@
   --filter-bg: #fff;
   --checkbox-bg: #fff;
   --checkbox-border: #ccc;
+  --header-bg: #fff;
+  --header-text: #111;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +32,8 @@
     --checkbox-border: #555;
     --border-color: #444;
     --secondary-color: #3d3d3d;
+    --header-bg: #2d2d2d;
+    --header-text: #eee;
   }
 }
 
@@ -45,7 +49,8 @@ header {
   position: sticky; 
   top: 0; 
   z-index: 100; 
-  background: rgba(var(--card-bg-rgb, 255, 255, 255), .98); 
+  background: var(--header-bg); 
+  color: var(--header-text);
   backdrop-filter: blur(8px); 
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 2px 10px rgba(0,0,0,.05);
@@ -63,7 +68,15 @@ h1 {
   margin:0; 
   font-size:20px; 
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--header-text);
+}
+.authors {
+  font-size: 12px;
+  color: var(--header-text);
+  opacity: 0.7;
+  margin: 2px 0 0;
+  text-align: center;
+  font-style: italic;
 }
 .grow { 
   flex: 1 1 240px; 
@@ -128,12 +141,13 @@ h1 {
 .hero-select-wrapper {
   flex: 1 1 300px;
   min-width: 200px;
+  position: relative;
 }
 .hero-select-container {
   position: relative;
   width: 100%;
 }
-.hero-select-container select {
+.hero-select-toggle {
   width: 100%;
   padding: 8px 12px;
   font-size: 14px;
@@ -141,32 +155,20 @@ h1 {
   border-radius: 8px;
   background: var(--card-bg);
   color: var(--text-color);
-  appearance: none;
   cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.hero-select-container:after {
+.hero-select-toggle:after {
   content: '▼';
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--text-color);
-  opacity: 0.6;
   font-size: 12px;
+  opacity: 0.6;
+  transition: transform 0.2s;
 }
-.hero-select-container select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-}
-.hero-select-container option {
-  padding: 8px;
-  background: var(--card-bg);
-  color: var(--text-color);
-}
-.hero-select-container option:checked {
-  background: var(--primary-color);
-  color: white;
+.hero-select-toggle.show:after {
+  transform: rotate(180deg);
 }
 .hero-checkboxes {
   position: absolute;
@@ -177,8 +179,8 @@ h1 {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-top: 4px;
-  padding: 8px;
-  max-height: 300px;
+  padding: 12px;
+  max-height: 400px;
   overflow-y: auto;
   display: none;
   z-index: 101;
@@ -186,6 +188,20 @@ h1 {
 }
 .hero-checkboxes.show {
   display: block;
+}
+.hero-checkboxes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+.hero-checkboxes-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
 }
 .hero-checkbox-item {
   display: flex;
@@ -211,18 +227,24 @@ h1 {
   flex: 1;
   cursor: pointer;
   font-size: 14px;
+  color: var(--text-color);
 }
 .hero-select-actions {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid var(--border-color);
 }
 .hero-select-actions .btn {
   flex: 1;
+  font-size: 13px;
+  padding: 8px;
+}
+.hero-selected-count {
   font-size: 12px;
-  padding: 6px 8px;
+  color: var(--primary-color);
+  font-weight: 500;
 }
 
 /* Фильтры */
@@ -926,16 +948,6 @@ h1 {
   color: var(--text-color);
 }
 
-/* Авторы под заголовком */
-.authors {
-  font-size: 12px;
-  color: var(--text-color);
-  opacity: 0.6;
-  margin: 2px 0 0;
-  text-align: center;
-  font-style: italic;
-}
-
 /* Улучшение для очень маленьких экранов */
 @media (max-width: 320px) {
   .cards { 
@@ -982,6 +994,9 @@ h1 {
   h1 {
     font-size: 18px;
   }
+  .authors {
+    font-size: 11px;
+  }
   .bar input[type="search"], .bar select, .bar button {
     font-size: 13px;
     padding: 7px 10px;
@@ -1026,14 +1041,19 @@ h1 {
 </div>
 <div class="hero-select-wrapper">
   <div class="hero-select-container">
-    <select id="heroSelect" title="Выберите героев" aria-label="Выбор героев">
-      <option value="" selected disabled>Выберите героев...</option>
-    </select>
+    <button id="heroSelectToggle" class="hero-select-toggle" aria-label="Выбор героев">
+      <span id="heroSelectText">Выберите героев...</span>
+    </button>
     <div id="heroCheckboxes" class="hero-checkboxes">
+      <div class="hero-checkboxes-header">
+        <h3>Выберите героев</h3>
+        <span id="heroSelectedCount" class="hero-selected-count">0 выбрано</span>
+      </div>
       <div id="heroCheckboxesList"></div>
       <div class="hero-select-actions">
         <button id="selectAllHeroes" class="btn">Выбрать все</button>
         <button id="deselectAllHeroes" class="btn">Снять все</button>
+        <button id="applyHeroSelection" class="btn primary">Применить</button>
       </div>
     </div>
   </div>
@@ -1118,7 +1138,7 @@ h1 {
       </div>
     </div>
     
-    <button id="applyFilters" class="btn primary apply-filters-btn">Применить</button>
+    <button id="applyFilters" class="btn primary apply-filters-btn">Применить фильтры</button>
   </div>
 </aside>
 
@@ -1165,7 +1185,7 @@ h1 {
     <div class="clan">
       <strong>Разработано:</strong><br>
       Евгений Поташко и Владимир Плотников<br>
-      <strong>Клан: "Рожен в СССР"</strong>
+      <strong>Клан: "Рожденные в СССР"</strong>
     </div>
     <div class="contact">
       <strong>Обратная связь:</strong><br>
@@ -1209,11 +1229,14 @@ const els = {
   openFilters: document.getElementById('openFilters'),
   closeFilters: document.getElementById('closeFilters'),
   applyFilters: document.getElementById('applyFilters'),
-  heroSelect: document.getElementById('heroSelect'),
+  heroSelectToggle: document.getElementById('heroSelectToggle'),
+  heroSelectText: document.getElementById('heroSelectText'),
   heroCheckboxes: document.getElementById('heroCheckboxes'),
   heroCheckboxesList: document.getElementById('heroCheckboxesList'),
+  heroSelectedCount: document.getElementById('heroSelectedCount'),
   selectAllHeroes: document.getElementById('selectAllHeroes'),
   deselectAllHeroes: document.getElementById('deselectAllHeroes'),
+  applyHeroSelection: document.getElementById('applyHeroSelection'),
   filters: document.getElementById('filters'),
   count: document.getElementById('count'),
   cards: document.getElementById('cards'),
@@ -1247,6 +1270,7 @@ const els = {
 let allRows = [];
 let viewRows = [];
 let currentIdx = -1;
+let allHeroNames = [];
 
 const selected = {
   element: new Set(),
@@ -1291,16 +1315,27 @@ function fileCellToUrl(v){
   return '';
 }
 
-// Функция для обновления выпадающего списка героев
-function updateHeroSelect(rows) {
-  const heroNames = uniq(rows.map(r => r[F.name])).sort(sortAlpha);
+// Функция для обновления отображения выбранных героев
+function updateHeroSelectDisplay() {
+  const count = selected.heroes.size;
+  els.heroSelectedCount.textContent = `${count} выбрано`;
   
-  // Обновляем select
-  els.heroSelect.innerHTML = '<option value="" selected disabled>Выберите героев...</option>' + 
-    heroNames.map(name => `<option value="${name}">${name}</option>`).join('');
-  
-  // Обновляем чекбоксы
-  els.heroCheckboxesList.innerHTML = heroNames.map(name => {
+  if (count === 0) {
+    els.heroSelectText.textContent = 'Выберите героев...';
+  } else if (count === 1) {
+    const heroName = Array.from(selected.heroes)[0];
+    els.heroSelectText.textContent = heroName;
+  } else if (count === allHeroNames.length) {
+    els.heroSelectText.textContent = 'Все герои';
+  } else {
+    const firstHero = Array.from(selected.heroes)[0];
+    els.heroSelectText.textContent = `${firstHero} и еще ${count - 1}`;
+  }
+}
+
+// Функция для обновления чекбоксов героев
+function updateHeroCheckboxes() {
+  els.heroCheckboxesList.innerHTML = allHeroNames.map(name => {
     const isSelected = selected.heroes.has(name);
     return `
       <div class="hero-checkbox-item">
@@ -1322,26 +1357,8 @@ function updateHeroSelect(rows) {
       updateHeroSelectDisplay();
     });
   });
-}
-
-// Функция для обновления отображения выбранных героев
-function updateHeroSelectDisplay() {
-  const heroNames = Array.from(selected.heroes);
-  if (heroNames.length === 0) {
-    els.heroSelect.value = '';
-  } else {
-    els.heroSelect.value = heroNames[0];
-  }
   
-  // Обновляем текст для отображения количества выбранных героев
-  const displayText = heroNames.length === 0 
-    ? 'Выберите героев...' 
-    : heroNames.length === 1 
-      ? heroNames[0]
-      : `${heroNames[0]} и еще ${heroNames.length - 1}`;
-  
-  els.heroSelect.innerHTML = `<option value="" ${heroNames.length === 0 ? 'selected' : ''}>${displayText}</option>` + 
-    Array.from(selected.heroes).map(name => `<option value="${name}" selected>${name}</option>`).join('');
+  updateHeroSelectDisplay();
 }
 
 function buildFacet(container, values, facetKey){
@@ -1376,7 +1393,10 @@ function initAllFacets(rows){
   buildFacet(els.facet.attackType, rows.map(r=>r[F.attackType]), 'attackType');
   buildFacet(els.facet.summon,  rows.map(r=>r[F.summon]),  'summon');
   buildFacet(els.facet.clazz,   rows.map(r=>r[F.clazz]),   'clazz');
-  updateHeroSelect(rows);
+  
+  // Инициализация списка всех героев
+  allHeroNames = uniq(rows.map(r => r[F.name])).sort(sortAlpha);
+  updateHeroCheckboxes();
 }
 
 function selectAll(facetKey){
@@ -1539,7 +1559,6 @@ function applyFilters(){
 
   els.count.textContent = `Найдено: ${viewRows.length}`;
   renderCards(viewRows);
-  updateHeroSelect(viewRows);
 }
 
 function attachEvents(){
@@ -1549,31 +1568,33 @@ function attachEvents(){
   });
   
   // Обработчики для выбора героев
-  els.heroSelect.addEventListener('focus', () => {
-    els.heroCheckboxes.classList.add('show');
-  });
-  
-  els.heroSelect.addEventListener('click', (e) => {
+  els.heroSelectToggle.addEventListener('click', (e) => {
+    els.heroSelectToggle.classList.toggle('show');
     els.heroCheckboxes.classList.toggle('show');
     e.stopPropagation();
   });
   
   els.selectAllHeroes.addEventListener('click', () => {
-    const allHeroNames = uniq(allRows.map(r => r[F.name]));
     selected.heroes = new Set(allHeroNames);
-    updateHeroSelect(allRows);
-    updateHeroSelectDisplay();
+    updateHeroCheckboxes();
   });
   
   els.deselectAllHeroes.addEventListener('click', () => {
     selected.heroes.clear();
-    updateHeroSelect(allRows);
-    updateHeroSelectDisplay();
+    updateHeroCheckboxes();
+  });
+  
+  // Кнопка "Применить" для выбора героев
+  els.applyHeroSelection.addEventListener('click', () => {
+    els.heroSelectToggle.classList.remove('show');
+    els.heroCheckboxes.classList.remove('show');
+    applyFilters(); // Применяем фильтры сразу после выбора героев
   });
   
   // Закрытие выпадающего списка при клике вне его
   document.addEventListener('click', (e) => {
-    if (!els.heroSelect.contains(e.target) && !els.heroCheckboxes.contains(e.target)) {
+    if (!els.heroSelectToggle.contains(e.target) && !els.heroCheckboxes.contains(e.target)) {
+      els.heroSelectToggle.classList.remove('show');
       els.heroCheckboxes.classList.remove('show');
     }
   });
@@ -1592,11 +1613,10 @@ function attachEvents(){
     els.sortDir.value = 'desc';
     Object.keys(selected).forEach(k => selected[k].clear());
     initAllFacets(allRows);
-    updateHeroSelectDisplay();
     applyFilters();
   });
   
-  // Кнопка "Применить"
+  // Кнопка "Применить" в фильтрах
   els.applyFilters.addEventListener('click', () => {
     applyFilters();
     els.filters.classList.remove('show');
