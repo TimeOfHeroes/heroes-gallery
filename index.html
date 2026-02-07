@@ -124,6 +124,107 @@ h1 {
   } 
 }
 
+/* Выбор героев в верхней панели */
+.hero-select-wrapper {
+  flex: 1 1 300px;
+  min-width: 200px;
+}
+.hero-select-container {
+  position: relative;
+  width: 100%;
+}
+.hero-select-container select {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--checkbox-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-color);
+  appearance: none;
+  cursor: pointer;
+}
+.hero-select-container:after {
+  content: '▼';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-color);
+  opacity: 0.6;
+  font-size: 12px;
+}
+.hero-select-container select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+.hero-select-container option {
+  padding: 8px;
+  background: var(--card-bg);
+  color: var(--text-color);
+}
+.hero-select-container option:checked {
+  background: var(--primary-color);
+  color: white;
+}
+.hero-checkboxes {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-top: 4px;
+  padding: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+  z-index: 101;
+  box-shadow: 0 4px 20px rgba(0,0,0,.15);
+}
+.hero-checkboxes.show {
+  display: block;
+}
+.hero-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.hero-checkbox-item:hover {
+  background: var(--secondary-color);
+}
+.hero-checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+  background: var(--checkbox-bg);
+  border: 1px solid var(--checkbox-border);
+}
+.hero-checkbox-item label {
+  flex: 1;
+  cursor: pointer;
+  font-size: 14px;
+}
+.hero-select-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+.hero-select-actions .btn {
+  flex: 1;
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
 /* Фильтры */
 .filters { 
   background: var(--filter-bg); 
@@ -287,6 +388,11 @@ h1 {
   #openFilters { 
     display: inline-block; 
   }
+  .hero-select-wrapper {
+    order: -1;
+    flex-basis: 100%;
+    margin-bottom: 8px;
+  }
 }
 
 /* Контент и карточки */
@@ -301,21 +407,6 @@ h1 {
   font-size:15px;
   padding: 8px 0;
   font-weight: 500;
-}
-
-/* Выбор героев */
-.hero-select-container {
-  margin-bottom: 20px;
-  width: 100%;
-}
-.hero-select-container select {
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--card-bg);
-  color: var(--text-color);
 }
 
 /* Адаптивная сетка карточек */
@@ -488,10 +579,10 @@ h1 {
   color: var(--text-color);
   opacity: 0.8;
   padding: 0 12px 8px;
-  line-height: 1.
-    border-top: 1px solid var(--border-color);
+  line-height: 1.4;
+  border-top: 1px solid var(--border-color);
   margin-top: 4px;
-  padding-top: 4px;
+  padding-top: 8px;
 }
 
 /* Модалка */
@@ -646,41 +737,6 @@ h1 {
 }
 .nav.prev { left: 12px; } 
 .nav.next { right: 12px; }
-.all-fields { 
-  margin-top: 20px; 
-  border-top: 1px solid var(--border-color); 
-  padding-top: 16px; 
-}
-.all-fields h3 {
-  margin: 0 0 12px;
-  font-size: 18px;
-  color: var(--text-color);
-}
-.all-fields table { 
-  width:100%; 
-  border-collapse: collapse; 
-}
-.all-fields th, .all-fields td { 
-  text-align:left; 
-  vertical-align: top; 
-  padding:8px 12px; 
-  border-bottom:1px solid var(--border-color); 
-  font-size:14px;
-  line-height: 1.4;
-  color: var(--text-color);
-}
-.all-fields th { 
-  width: 35%; 
-  color: var(--text-color);
-  opacity: 0.8;
-  font-weight: 500;
-  white-space: nowrap;
-}
-.all-fields td {
-  word-break: break-word;
-  max-width: 0;
-  overflow-wrap: break-word;
-}
 .open-img { 
   margin-top:12px; 
   display:inline-block; 
@@ -968,6 +1024,20 @@ h1 {
   <h1>Время Героев. Галерея героев.</h1>
   <div class="authors">Евгений Поташко и Владимир Плотников, клан "Рожденные в СССР"</div>
 </div>
+<div class="hero-select-wrapper">
+  <div class="hero-select-container">
+    <select id="heroSelect" title="Выберите героев" aria-label="Выбор героев">
+      <option value="" selected disabled>Выберите героев...</option>
+    </select>
+    <div id="heroCheckboxes" class="hero-checkboxes">
+      <div id="heroCheckboxesList"></div>
+      <div class="hero-select-actions">
+        <button id="selectAllHeroes" class="btn">Выбрать все</button>
+        <button id="deselectAllHeroes" class="btn">Снять все</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="grow">
 <input id="q" type="search" class="btn" placeholder="Поиск по имени/способностям">
 </div>
@@ -993,11 +1063,6 @@ h1 {
 <div class="head">
 <h2>Фильтры</h2>
 <button id="closeFilters" class="btn">Закрыть</button>
-</div>
-<div class="hero-select-container">
-  <select id="heroSelect" multiple size="5">
-    <option value="">Выберите героев...</option>
-  </select>
 </div>
 <div class="facet" data-facet="element">
       <h3>Стихия</h3>
@@ -1086,10 +1151,6 @@ h1 {
     <div id="mAbilities" class="pre"></div>
     <h3>Пассивные способности</h3>
     <div id="mPassive" class="pre"></div>
-    <div class="all-fields">
-      <h3>Все поля</h3>
-      <table id="mAllFields"></table>
-    </div>
   </div>
 </div>
 </div>
@@ -1104,7 +1165,7 @@ h1 {
     <div class="clan">
       <strong>Разработано:</strong><br>
       Евгений Поташко и Владимир Плотников<br>
-      <strong>Клан: "Рожденные в СССР"</strong>
+      <strong>Клан: "Рожен в СССР"</strong>
     </div>
     <div class="contact">
       <strong>Обратная связь:</strong><br>
@@ -1149,6 +1210,10 @@ const els = {
   closeFilters: document.getElementById('closeFilters'),
   applyFilters: document.getElementById('applyFilters'),
   heroSelect: document.getElementById('heroSelect'),
+  heroCheckboxes: document.getElementById('heroCheckboxes'),
+  heroCheckboxesList: document.getElementById('heroCheckboxesList'),
+  selectAllHeroes: document.getElementById('selectAllHeroes'),
+  deselectAllHeroes: document.getElementById('deselectAllHeroes'),
   filters: document.getElementById('filters'),
   count: document.getElementById('count'),
   cards: document.getElementById('cards'),
@@ -1173,7 +1238,6 @@ const els = {
   mStats: document.getElementById('mStats'),
   mAbilities: document.getElementById('mAbilities'),
   mPassive: document.getElementById('mPassive'),
-  mAllFields: document.getElementById('mAllFields'),
   infoModal: document.getElementById('infoModal'),
   infoBtn: document.getElementById('infoBtn'),
   infoClose: document.getElementById('infoClose'),
@@ -1191,7 +1255,7 @@ const selected = {
   attackType: new Set(),
   summon: new Set(),
   clazz: new Set(),
-  heroes: new Set() // Новый: выбранные герои
+  heroes: new Set()
 };
 
 function toNum(v){ const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? n : null; }
@@ -1227,23 +1291,57 @@ function fileCellToUrl(v){
   return '';
 }
 
-// Обновленная функция для обновления списка героев
+// Функция для обновления выпадающего списка героев
 function updateHeroSelect(rows) {
-  const heroSelect = els.heroSelect;
-  const currentValues = Array.from(heroSelect.selectedOptions).map(opt => opt.value);
-  
-  // Получаем уникальные имена героев из отфильтрованных строк
   const heroNames = uniq(rows.map(r => r[F.name])).sort(sortAlpha);
   
-  // Сохраняем выбранные значения
-  heroSelect.innerHTML = '<option value="">Выберите героев...</option>' + 
-    heroNames.map(name => {
-      const isSelected = selected.heroes.has(name) || currentValues.includes(name);
-      return `<option value="${name}" ${isSelected ? 'selected' : ''}>${name}</option>`;
-    }).join('');
+  // Обновляем select
+  els.heroSelect.innerHTML = '<option value="" selected disabled>Выберите героев...</option>' + 
+    heroNames.map(name => `<option value="${name}">${name}</option>`).join('');
   
-  // Обновляем множество выбранных героев
-  selected.heroes = new Set(Array.from(heroSelect.selectedOptions).map(opt => opt.value).filter(v => v));
+  // Обновляем чекбоксы
+  els.heroCheckboxesList.innerHTML = heroNames.map(name => {
+    const isSelected = selected.heroes.has(name);
+    return `
+      <div class="hero-checkbox-item">
+        <input type="checkbox" id="hero-${name}" data-hero="${name}" ${isSelected ? 'checked' : ''}>
+        <label for="hero-${name}">${name}</label>
+      </div>
+    `;
+  }).join('');
+  
+  // Добавляем обработчики для чекбоксов
+  els.heroCheckboxesList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const heroName = this.getAttribute('data-hero');
+      if (this.checked) {
+        selected.heroes.add(heroName);
+      } else {
+        selected.heroes.delete(heroName);
+      }
+      updateHeroSelectDisplay();
+    });
+  });
+}
+
+// Функция для обновления отображения выбранных героев
+function updateHeroSelectDisplay() {
+  const heroNames = Array.from(selected.heroes);
+  if (heroNames.length === 0) {
+    els.heroSelect.value = '';
+  } else {
+    els.heroSelect.value = heroNames[0];
+  }
+  
+  // Обновляем текст для отображения количества выбранных героев
+  const displayText = heroNames.length === 0 
+    ? 'Выберите героев...' 
+    : heroNames.length === 1 
+      ? heroNames[0]
+      : `${heroNames[0]} и еще ${heroNames.length - 1}`;
+  
+  els.heroSelect.innerHTML = `<option value="" ${heroNames.length === 0 ? 'selected' : ''}>${displayText}</option>` + 
+    Array.from(selected.heroes).map(name => `<option value="${name}" selected>${name}</option>`).join('');
 }
 
 function buildFacet(container, values, facetKey){
@@ -1267,7 +1365,6 @@ function buildFacet(container, values, facetKey){
     cb.addEventListener('change', ()=>{
       const set = selected[facetKey];
       if (cb.checked) set.add(cb.value); else set.delete(cb.value);
-      // Не применяем фильтры сразу, ждем кнопку "Применить"
     });
   });
 }
@@ -1313,10 +1410,8 @@ function renderCards(rows){
   els.empty.style.display = 'none';
   els.cards.innerHTML = rows.map((r, i)=>{
     const img = fileCellToUrl(r[F.image]);
-    const abilitiesOneLine = String(r[F.abilities]||'').split(/\r?\n/).filter(Boolean)[0] || '';
     const abilitiesFull = String(r[F.abilities]||'');
-    const hasLongAbilities = abilitiesFull.length > 80;
-    const abilitiesShort = abilitiesOneLine.length > 50 ? abilitiesOneLine.substring(0, 50) + '...' : abilitiesOneLine;
+    const hasAbilities = abilitiesFull.trim().length > 0;
     
     return `
       <article class="card" data-idx="${i}">
@@ -1340,12 +1435,9 @@ function renderCards(rows){
           <span class="pill">З: ${r[F.defense]||''}</span>
           <span class="pill">Ж: ${r[F.hp]||''}</span>
         </div>
-        ${abilitiesOneLine ? `
-          <div class="meta" style="font-size: 11px; color: var(--text-color); opacity: 0.8; padding: 0 8px 8px;" title="${String(r[F.abilities]).replace(/"/g,'&quot;')}">
-            ${abilitiesShort}
-            ${hasLongAbilities ? `<button class="toggle-abilities" data-idx="${i}">Показать все способности</button>` : ''}
-          </div>
-          ${hasLongAbilities ? `<div class="card-abilities-full" id="abilities-${i}">${abilitiesFull.replace(/\n/g, '<br>')}</div>` : ''}
+        ${hasAbilities ? `
+          <button class="toggle-abilities" data-idx="${i}">Показать способности</button>
+          <div class="card-abilities-full" id="abilities-${i}">${abilitiesFull.replace(/\n/g, '<br>')}</div>
         ` : ''}
       </article>
     `;
@@ -1359,7 +1451,7 @@ function renderCards(rows){
       const fullAbilities = document.getElementById(`abilities-${idx}`);
       if (fullAbilities.style.display === 'block') {
         fullAbilities.style.display = 'none';
-        this.textContent = 'Показать все способности';
+        this.textContent = 'Показать способности';
       } else {
         fullAbilities.style.display = 'block';
         this.textContent = 'Скрыть способности';
@@ -1368,7 +1460,6 @@ function renderCards(rows){
   });
 }
 
-// Обновленная функция fillModal без дублирования полей
 function fillModal(h){
   const img = fileCellToUrl(h[F.image]);
   els.mImg.src = img || '';
@@ -1395,42 +1486,6 @@ function fillModal(h){
   `;
   els.mAbilities.textContent = h[F.abilities] || '—';
   els.mPassive.textContent = h[F.passive] || '—';
-
-  // Убираем дублирующиеся поля и добавляем пояснения
-  const order = [
-    ['ID', F.id],
-    ['Стихия', F.element],
-    ['Количество звезд', F.stars],
-    ['Скорость маны', F.mana],
-    ['Сила', F.power],
-    ['Атака', F.attack],
-    ['Защита', F.defense],
-    ['Жизни', F.hp],
-    ['Место призыва', F.summon],
-    ['Класс', F.clazz],
-    ['Картинка (URL)', F.image],
-  ];
-  
-  els.mAllFields.innerHTML = order.map(([label, key])=>{
-    let val = h[key];
-    if (key === F.image) val = fileCellToUrl(val) || '';
-    if (key === F.attackType) {
-      return `<tr><th>Способ атаки</th><td>${h[F.attackType] ? `${h[F.attackType]} (${getAttackTypeDescription(h[F.attackType])})` : '—'}</td></tr>`;
-    }
-    return `<tr><th>${label}</th><td>${val ? String(val).replace(/\n/g,'<br>') : '—'}</td></tr>`;
-  }).join('');
-}
-
-// Функция для описания способа атаки
-function getAttackTypeDescription(type) {
-  const descriptions = {
-    '1': 'Атака одного врага',
-    'Все': 'Атака всех врагов',
-    '1+2': 'Атака одного врага и ближайших',
-    '1+1': 'Атака одного врага, затем случайного',
-    'Все+': 'Атака всех с дополнительными эффектами'
-  };
-  return descriptions[type] || 'Стандартная атака';
 }
 
 function openModal(idx){
@@ -1455,9 +1510,6 @@ function go(delta){
 
 function applyFilters(){
   const q = els.q.value.trim().toLowerCase();
-  
-  // Обновляем выбранных героев из select
-  selected.heroes = new Set(Array.from(els.heroSelect.selectedOptions).map(opt => opt.value).filter(v => v));
   
   viewRows = allRows.filter(r=>{
     const tName = String(r[F.name]||'').toLowerCase();
@@ -1487,8 +1539,6 @@ function applyFilters(){
 
   els.count.textContent = `Найдено: ${viewRows.length}`;
   renderCards(viewRows);
-  
-  // Обновляем список героев в выпадающем списке
   updateHeroSelect(viewRows);
 }
 
@@ -1498,10 +1548,34 @@ function attachEvents(){
     el.addEventListener('change', applyFilters);
   });
   
-  // Обновляем select героев при изменении
-  els.heroSelect.addEventListener('change', () => {
-    // Только обновляем selected.heroes, но не применяем фильтры
-    selected.heroes = new Set(Array.from(els.heroSelect.selectedOptions).map(opt => opt.value).filter(v => v));
+  // Обработчики для выбора героев
+  els.heroSelect.addEventListener('focus', () => {
+    els.heroCheckboxes.classList.add('show');
+  });
+  
+  els.heroSelect.addEventListener('click', (e) => {
+    els.heroCheckboxes.classList.toggle('show');
+    e.stopPropagation();
+  });
+  
+  els.selectAllHeroes.addEventListener('click', () => {
+    const allHeroNames = uniq(allRows.map(r => r[F.name]));
+    selected.heroes = new Set(allHeroNames);
+    updateHeroSelect(allRows);
+    updateHeroSelectDisplay();
+  });
+  
+  els.deselectAllHeroes.addEventListener('click', () => {
+    selected.heroes.clear();
+    updateHeroSelect(allRows);
+    updateHeroSelectDisplay();
+  });
+  
+  // Закрытие выпадающего списка при клике вне его
+  document.addEventListener('click', (e) => {
+    if (!els.heroSelect.contains(e.target) && !els.heroCheckboxes.contains(e.target)) {
+      els.heroCheckboxes.classList.remove('show');
+    }
   });
   
   document.querySelectorAll('.facet .actions button').forEach(btn=>{
@@ -1517,22 +1591,20 @@ function attachEvents(){
     els.sortBy.value = 'Сила';
     els.sortDir.value = 'desc';
     Object.keys(selected).forEach(k => selected[k].clear());
-    els.heroSelect.selectedIndex = 0;
     initAllFacets(allRows);
+    updateHeroSelectDisplay();
     applyFilters();
   });
   
   // Кнопка "Применить"
   els.applyFilters.addEventListener('click', () => {
     applyFilters();
-    // Закрываем панель фильтров
     els.filters.classList.remove('show');
     els.filters.setAttribute('aria-hidden','true');
     document.body.style.overflow = '';
   });
   
   els.cards.addEventListener('click', (e)=>{
-    // Проверяем, не была ли нажата кнопка раскрытия способностей
     if (e.target.classList.contains('toggle-abilities')) {
       return;
     }
