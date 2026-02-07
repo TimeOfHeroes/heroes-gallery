@@ -12,20 +12,40 @@
   --primary-color: #0a7;
   --secondary-color: #f3f3f3;
   --border-color: #ddd;
+  --text-color: #111;
+  --bg-color: #f7f7f7;
+  --card-bg: #fff;
+  --filter-bg: #fff;
+  --checkbox-bg: #fff;
+  --checkbox-border: #ccc;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-color: #eee;
+    --bg-color: #1a1a1a;
+    --card-bg: #2d2d2d;
+    --filter-bg: #2d2d2d;
+    --checkbox-bg: #3d3d3d;
+    --checkbox-border: #555;
+    --border-color: #444;
+    --secondary-color: #3d3d3d;
+  }
+}
+
 * { box-sizing: border-box; }
 body { 
   margin:0; 
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
-  background:#f7f7f7; 
-  color:#111;
+  background: var(--bg-color); 
+  color: var(--text-color);
   line-height: 1.4;
 }
 header { 
   position: sticky; 
   top: 0; 
   z-index: 100; 
-  background: rgba(255,255,255,.98); 
+  background: rgba(var(--card-bg-rgb, 255, 255, 255), .98); 
   backdrop-filter: blur(8px); 
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 2px 10px rgba(0,0,0,.05);
@@ -43,7 +63,7 @@ h1 {
   margin:0; 
   font-size:20px; 
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
 }
 .grow { 
   flex: 1 1 240px; 
@@ -54,9 +74,10 @@ h1 {
 .bar input[type="search"], .bar select, .bar button { 
   font-size:14px; 
   padding:8px 12px; 
-  border: 1px solid #ccc;
+  border: 1px solid var(--checkbox-border);
   border-radius: 8px;
-  background: white;
+  background: var(--card-bg);
+  color: var(--text-color);
   transition: all 0.2s;
 }
 .bar input[type="search"]:focus, .bar select:focus { 
@@ -65,16 +86,17 @@ h1 {
   box-shadow: 0 0 0 2px rgba(10, 119, 0, 0.1);
 }
 .btn { 
-  border:1px solid #ccc; 
-  background:#fff; 
+  border:1px solid var(--checkbox-border); 
+  background: var(--card-bg); 
+  color: var(--text-color);
   border-radius:8px; 
   cursor:pointer;
   transition: all 0.2s;
   font-weight: 500;
 }
 .btn:hover {
-  background: #f5f5f5;
-  border-color: #999;
+  background: var(--secondary-color);
+  border-color: var(--checkbox-border);
   transform: translateY(-1px);
 }
 .btn.primary { 
@@ -102,17 +124,17 @@ h1 {
   } 
 }
 
-/* Фильтры - ИСПРАВЛЕНЫ ЦВЕТА */
+/* Фильтры */
 .filters { 
-  background:#fff; 
-  border:1px solid #e5e5e5; 
+  background: var(--filter-bg); 
+  border:1px solid var(--border-color); 
   border-radius:12px;
   box-shadow: 0 2px 10px rgba(0,0,0,.05);
   width: 320px;
 }
 .filters .panel { 
   padding:16px; 
-  background: #fff; /* Добавлено: белый фон для всей панели */
+  background: var(--filter-bg);
 }
 .filters .head { 
   display:flex; 
@@ -120,36 +142,36 @@ h1 {
   justify-content:space-between; 
   margin-bottom:16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #eee;
-  background: #fff; /* Добавлено: белый фон для заголовка */
+  border-bottom: 1px solid var(--border-color);
+  background: var(--filter-bg);
 }
 .filters h2 { 
   margin:0; 
   font-size:18px; 
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
 }
 .facet { 
   margin-bottom:20px; 
-  background: #fff; /* Добавлено: белый фон для каждого фильтра */
-  padding: 0; /* Убраны отступы, которые могли создавать серый фон */
+  background: var(--filter-bg);
+  padding: 0;
 }
 .facet h3 { 
   margin:0 0 10px; 
   font-size:15px; 
-  color:#333;
+  color: var(--text-color);
   font-weight: 500;
-  background: #fff; /* Добавлено: белый фон для заголовков */
-  padding: 0; /* Убраны отступы */
+  background: var(--filter-bg);
+  padding: 0;
 }
 .opts { 
   max-height:200px; 
   overflow-y: auto;
   overflow-x: hidden;
-  border:1px solid #eee; 
+  border:1px solid var(--border-color); 
   border-radius:8px; 
   padding:8px; 
-  background:#fafafa; 
+  background: var(--secondary-color);
 }
 .opt { 
   display:flex; 
@@ -161,26 +183,39 @@ h1 {
   padding: 4px 6px;
   border-radius: 4px;
   transition: background 0.2s;
-  background: transparent; /* Явно указан прозрачный фон */
+  background: transparent;
+  color: var(--text-color);
 }
 .opt:hover {
-  background: #f0f0f0;
+  background: rgba(0,0,0,.1);
 }
 .opt input[type="checkbox"] { 
   width: 18px; 
   height: 18px; 
   cursor: pointer; 
   flex-shrink: 0;
+  accent-color: var(--primary-color);
+  background: var(--checkbox-bg);
+  border: 1px solid var(--checkbox-border);
 }
 .facet .actions { 
   display:flex; 
   gap:8px; 
   margin-top:10px; 
-  background: #fff; /* Добавлено: белый фон для кнопок */
+  background: var(--filter-bg);
 }
 .facet .actions .btn { 
   font-size:13px; 
   padding:6px 10px; 
+}
+
+/* Кнопка Применить */
+.apply-filters-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 /* Десктопная панель фильтров */
@@ -198,7 +233,7 @@ h1 {
     box-shadow: 2px 0 15px rgba(0,0,0,.1);
     transform: translateX(-100%);
     transition: transform 0.3s ease;
-    background: #fff; /* Добавлено: явный белый фон */
+    background: var(--filter-bg);
   }
   .filters.show {
     transform: translateX(0);
@@ -208,7 +243,7 @@ h1 {
   }
 }
 
-/* Мобильный оффканвас - ИСПРАВЛЕНЫ ГРАНИЦЫ */
+/* Мобильный оффканвас */
 @media (max-width: 1024px) {
   .filters { 
     position: fixed; 
@@ -230,10 +265,10 @@ h1 {
     right:0; 
     top:0; 
     bottom:0; 
-    width: min(380px, 90vw); /* Уменьшена максимальная ширина */
-    max-width: 90vw; /* Ограничена ширина */
+    width: min(380px, 90vw);
+    max-width: 90vw;
     overflow:auto; 
-    background:#fff; 
+    background: var(--filter-bg); 
     border-radius:12px 0 0 12px;
     padding: 20px;
     box-sizing: border-box;
@@ -243,7 +278,7 @@ h1 {
   .filters .head { 
     position: sticky; 
     top:0; 
-    background:#fff; 
+    background: var(--filter-bg); 
     padding-top:12px; 
     z-index:1;
     padding-bottom: 12px;
@@ -254,15 +289,6 @@ h1 {
   }
 }
 
-/* Дополнительные исправления для очень маленьких экранов */
-@media (max-width: 380px) {
-  .filters .panel {
-    width: 95vw;
-    max-width: 95vw;
-    padding: 16px;
-  }
-}
-
 /* Контент и карточки */
 .content { 
   min-height:60vh; 
@@ -270,10 +296,26 @@ h1 {
 }
 #count { 
   margin:0 0 20px; 
-  color:#666; 
+  color: var(--text-color);
+  opacity: 0.7;
   font-size:15px;
   padding: 8px 0;
   font-weight: 500;
+}
+
+/* Выбор героев */
+.hero-select-container {
+  margin-bottom: 20px;
+  width: 100%;
+}
+.hero-select-container select {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-color);
 }
 
 /* Адаптивная сетка карточек */
@@ -284,7 +326,6 @@ h1 {
   width: 100%;
 }
 
-/* Десктоп - больше карточек в ряд */
 @media (min-width: 1025px) {
   .cards { 
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
@@ -292,7 +333,6 @@ h1 {
   }
 }
 
-/* Большие экраны */
 @media (min-width: 1400px) {
   .cards { 
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
@@ -335,10 +375,10 @@ h1 {
 }
 
 .card { 
-  border:1px solid #ddd; 
+  border:1px solid var(--border-color); 
   border-radius:12px; 
   overflow:hidden; 
-  background:#fff; 
+  background: var(--card-bg); 
   display:flex; 
   flex-direction:column; 
   transition: all 0.3s ease; 
@@ -355,7 +395,7 @@ h1 {
 .thumb { 
   width:100%; 
   height: 190px;
-  background:#f5f5f5; 
+  background: var(--secondary-color); 
   display:flex; 
   align-items:center; 
   justify-content:center; 
@@ -394,12 +434,13 @@ h1 {
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
-  color: #333;
+  color: var(--text-color);
 }
 
 .meta { 
   margin:0 12px 6px; 
-  color:#555; 
+  color: var(--text-color);
+  opacity: 0.8;
   display:flex; 
   gap:6px; 
   flex-wrap:wrap; 
@@ -416,13 +457,41 @@ h1 {
   justify-content: center;
 }
 .pill { 
-  background:#f3f3f3; 
-  border:1px solid #e6e6e6; 
+  background: var(--secondary-color); 
+  border:1px solid var(--border-color); 
   border-radius:999px; 
   padding:4px 8px; 
   font-size:12px;
   white-space: nowrap;
   font-weight: 500;
+  color: var(--text-color);
+}
+
+/* Кнопка для раскрытия способностей в карточке */
+.toggle-abilities {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin: 0 auto 8px;
+  text-decoration: underline;
+  display: block;
+}
+.toggle-abilities:hover {
+  color: #098;
+}
+.card-abilities-full {
+  display: none;
+  font-size: 11px;
+  color: var(--text-color);
+  opacity: 0.8;
+  padding: 0 12px 8px;
+  line-height: 1.
+    border-top: 1px solid var(--border-color);
+  margin-top: 4px;
+  padding-top: 4px;
 }
 
 /* Модалка */
@@ -446,8 +515,8 @@ h1 {
 }
 .dialog { 
   position: relative; 
-  background: #fff; 
-  color: #111; 
+  background: var(--card-bg); 
+  color: var(--text-color); 
   max-width: 1000px; 
   width: min(1000px, 95vw); 
   max-height: 90vh; 
@@ -476,7 +545,7 @@ h1 {
   max-height: 350px;
   object-fit: contain;
   border-radius: 12px;
-  background: #f5f5f5;
+  background: var(--secondary-color);
   padding: 15px;
 }
 .dialog .info-container {
@@ -490,14 +559,15 @@ h1 {
   margin: 0 0 12px; 
   font-size:28px; 
   font-weight: 700;
-  color: #222;
+  color: var(--text-color);
   line-height: 1.2;
 }
 .dialog .meta { 
   display:flex; 
   gap:10px; 
   flex-wrap:wrap; 
-  color:#555; 
+  color: var(--text-color);
+  opacity: 0.8;
   margin-bottom:10px; 
   font-size:15px;
   justify-content: flex-start;
@@ -511,14 +581,14 @@ h1 {
 .dialog .mStats .pill { 
   font-size:14px; 
   padding:8px 12px;
-  background: #e8f5e8;
+  background: rgba(10, 119, 0, 0.1);
   border-color: var(--primary-color);
-  color: #0a5;
+  color: var(--primary-color);
 }
 .pre { 
   white-space: pre-line; 
-  background:#fafafa; 
-  border:1px solid #eee; 
+  background: var(--secondary-color); 
+  border:1px solid var(--border-color); 
   border-radius:10px; 
   padding:12px; 
   font-size:15px; 
@@ -578,13 +648,13 @@ h1 {
 .nav.next { right: 12px; }
 .all-fields { 
   margin-top: 20px; 
-  border-top: 1px solid #eee; 
+  border-top: 1px solid var(--border-color); 
   padding-top: 16px; 
 }
 .all-fields h3 {
   margin: 0 0 12px;
   font-size: 18px;
-  color: #333;
+  color: var(--text-color);
 }
 .all-fields table { 
   width:100%; 
@@ -594,13 +664,15 @@ h1 {
   text-align:left; 
   vertical-align: top; 
   padding:8px 12px; 
-  border-bottom:1px solid #f0f0f0; 
+  border-bottom:1px solid var(--border-color); 
   font-size:14px;
   line-height: 1.4;
+  color: var(--text-color);
 }
 .all-fields th { 
   width: 35%; 
-  color:#444;
+  color: var(--text-color);
+  opacity: 0.8;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -669,7 +741,8 @@ h1 {
 /* Пустое состояние */
 #empty { 
   display:none; 
-  color:#666; 
+  color: var(--text-color);
+  opacity: 0.6;
   padding:40px 24px; 
   text-align: center;
   grid-column: 1 / -1;
@@ -722,7 +795,8 @@ h1 {
   display: flex;
 }
 .info-dialog {
-  background: white;
+  background: var(--card-bg);
+  color: var(--text-color);
   border-radius: 16px;
   padding: 30px;
   max-width: 500px;
@@ -732,17 +806,18 @@ h1 {
 }
 .info-dialog h2 {
   margin: 0 0 20px;
-  color: #333;
+  color: var(--text-color);
   font-size: 24px;
   text-align: center;
 }
 .info-dialog p {
   margin: 0 0 15px;
   line-height: 1.6;
-  color: #555;
+  color: var(--text-color);
+  opacity: 0.9;
 }
 .info-dialog .clan {
-  background: #e8f5e8;
+  background: rgba(10, 119, 0, 0.1);
   padding: 15px;
   border-radius: 10px;
   margin: 20px 0;
@@ -753,13 +828,30 @@ h1 {
   color: var(--primary-color);
   font-size: 18px;
 }
+.info-dialog .contact {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  margin: 20px 0;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+.info-dialog .contact a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+.info-dialog .contact a:hover {
+  text-decoration: underline;
+}
 .info-dialog .date {
   text-align: center;
   font-style: italic;
-  color: #888;
+  color: var(--text-color);
+  opacity: 0.6;
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-color);
 }
 .info-close {
   position: absolute;
@@ -769,11 +861,23 @@ h1 {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #999;
-  transition: color 0.2s;
+  color: var(--text-color);
+  opacity: 0.7;
+  transition: all 0.2s;
 }
 .info-close:hover {
-  color: #333;
+  opacity: 1;
+  color: var(--text-color);
+}
+
+/* Авторы под заголовком */
+.authors {
+  font-size: 12px;
+  color: var(--text-color);
+  opacity: 0.6;
+  margin: 2px 0 0;
+  text-align: center;
+  font-style: italic;
 }
 
 /* Улучшение для очень маленьких экранов */
@@ -846,12 +950,24 @@ h1 {
     pointer-events: none;
   }
 }
+
+/* Дополнительные исправления для очень маленьких экранов */
+@media (max-width: 380px) {
+  .filters .panel {
+    width: 95vw;
+    max-width: 95vw;
+    padding: 16px;
+  }
+}
 </style>
 </head>
 <body>
 <header>
 <div class="bar">
-<h1>Галерея героев</h1>
+<div>
+  <h1>Время Героев. Галерея героев.</h1>
+  <div class="authors">Евгений Поташко и Владимир Плотников, клан "Рожденные в СССР"</div>
+</div>
 <div class="grow">
 <input id="q" type="search" class="btn" placeholder="Поиск по имени/способностям">
 </div>
@@ -877,6 +993,11 @@ h1 {
 <div class="head">
 <h2>Фильтры</h2>
 <button id="closeFilters" class="btn">Закрыть</button>
+</div>
+<div class="hero-select-container">
+  <select id="heroSelect" multiple size="5">
+    <option value="">Выберите героев...</option>
+  </select>
 </div>
 <div class="facet" data-facet="element">
       <h3>Стихия</h3>
@@ -931,6 +1052,8 @@ h1 {
         <button class="btn" data-action="none" data-facet="clazz">Снять</button>
       </div>
     </div>
+    
+    <button id="applyFilters" class="btn primary apply-filters-btn">Применить</button>
   </div>
 </aside>
 
@@ -977,11 +1100,16 @@ h1 {
   <div class="info-dialog">
     <button id="infoClose" class="info-close" aria-label="Закрыть">×</button>
     <h2>О галерее героев</h2>
-    <p>Эта галерея содержит информацию о героях игры, их характеристиках и способностях.</p>
+    <p>Эта галерея содержит информацию о героях игры "Время Героев", их характеристиках и способностях.</p>
     <div class="clan">
-      <strong>Авторы:</strong><br>
+      <strong>Разработано:</strong><br>
       Евгений Поташко и Владимир Плотников<br>
-      <strong>Клан: "Рожденные в СССР."</strong>
+      <strong>Клан: "Рожденные в СССР"</strong>
+    </div>
+    <div class="contact">
+      <strong>Обратная связь:</strong><br>
+      Нашли ошибку или есть предложения?<br>
+      Пишите: <a href="mailto:master-Erasm@yandex.ru">master-Erasm@yandex.ru</a>
     </div>
     <p>База данных регулярно обновляется с учетом новых героев и изменений в балансе игры.</p>
     <p class="date">Дата последнего обновления: <span id="updateDate"></span></p>
@@ -1019,6 +1147,8 @@ const els = {
   resetAll: document.getElementById('resetAll'),
   openFilters: document.getElementById('openFilters'),
   closeFilters: document.getElementById('closeFilters'),
+  applyFilters: document.getElementById('applyFilters'),
+  heroSelect: document.getElementById('heroSelect'),
   filters: document.getElementById('filters'),
   count: document.getElementById('count'),
   cards: document.getElementById('cards'),
@@ -1061,6 +1191,7 @@ const selected = {
   attackType: new Set(),
   summon: new Set(),
   clazz: new Set(),
+  heroes: new Set() // Новый: выбранные герои
 };
 
 function toNum(v){ const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? n : null; }
@@ -1096,6 +1227,25 @@ function fileCellToUrl(v){
   return '';
 }
 
+// Обновленная функция для обновления списка героев
+function updateHeroSelect(rows) {
+  const heroSelect = els.heroSelect;
+  const currentValues = Array.from(heroSelect.selectedOptions).map(opt => opt.value);
+  
+  // Получаем уникальные имена героев из отфильтрованных строк
+  const heroNames = uniq(rows.map(r => r[F.name])).sort(sortAlpha);
+  
+  // Сохраняем выбранные значения
+  heroSelect.innerHTML = '<option value="">Выберите героев...</option>' + 
+    heroNames.map(name => {
+      const isSelected = selected.heroes.has(name) || currentValues.includes(name);
+      return `<option value="${name}" ${isSelected ? 'selected' : ''}>${name}</option>`;
+    }).join('');
+  
+  // Обновляем множество выбранных героев
+  selected.heroes = new Set(Array.from(heroSelect.selectedOptions).map(opt => opt.value).filter(v => v));
+}
+
 function buildFacet(container, values, facetKey){
   let opts = uniq(values);
   
@@ -1117,7 +1267,7 @@ function buildFacet(container, values, facetKey){
     cb.addEventListener('change', ()=>{
       const set = selected[facetKey];
       if (cb.checked) set.add(cb.value); else set.delete(cb.value);
-      applyFilters();
+      // Не применяем фильтры сразу, ждем кнопку "Применить"
     });
   });
 }
@@ -1129,6 +1279,7 @@ function initAllFacets(rows){
   buildFacet(els.facet.attackType, rows.map(r=>r[F.attackType]), 'attackType');
   buildFacet(els.facet.summon,  rows.map(r=>r[F.summon]),  'summon');
   buildFacet(els.facet.clazz,   rows.map(r=>r[F.clazz]),   'clazz');
+  updateHeroSelect(rows);
 }
 
 function selectAll(facetKey){
@@ -1140,17 +1291,17 @@ function selectAll(facetKey){
       case 'attackType': return r[F.attackType];
       case 'summon': return r[F.summon];
       case 'clazz': return r[F.clazz];
+      default: return null;
     }
-  }));
+  })).filter(v => v !== null);
+  
   selected[facetKey] = new Set(values.map(String));
   initAllFacets(allRows);
-  applyFilters();
 }
 
 function selectNone(facetKey){
   selected[facetKey].clear();
   initAllFacets(allRows);
-  applyFilters();
 }
 
 function renderCards(rows){
@@ -1163,6 +1314,8 @@ function renderCards(rows){
   els.cards.innerHTML = rows.map((r, i)=>{
     const img = fileCellToUrl(r[F.image]);
     const abilitiesOneLine = String(r[F.abilities]||'').split(/\r?\n/).filter(Boolean)[0] || '';
+    const abilitiesFull = String(r[F.abilities]||'');
+    const hasLongAbilities = abilitiesFull.length > 80;
     const abilitiesShort = abilitiesOneLine.length > 50 ? abilitiesOneLine.substring(0, 50) + '...' : abilitiesOneLine;
     
     return `
@@ -1187,12 +1340,35 @@ function renderCards(rows){
           <span class="pill">З: ${r[F.defense]||''}</span>
           <span class="pill">Ж: ${r[F.hp]||''}</span>
         </div>
-        ${abilitiesOneLine ? `<div class="meta" style="font-size: 11px; color: #666; padding: 0 8px 8px;" title="${String(r[F.abilities]).replace(/"/g,'&quot;')}">${abilitiesShort}</div>` : ''}
+        ${abilitiesOneLine ? `
+          <div class="meta" style="font-size: 11px; color: var(--text-color); opacity: 0.8; padding: 0 8px 8px;" title="${String(r[F.abilities]).replace(/"/g,'&quot;')}">
+            ${abilitiesShort}
+            ${hasLongAbilities ? `<button class="toggle-abilities" data-idx="${i}">Показать все способности</button>` : ''}
+          </div>
+          ${hasLongAbilities ? `<div class="card-abilities-full" id="abilities-${i}">${abilitiesFull.replace(/\n/g, '<br>')}</div>` : ''}
+        ` : ''}
       </article>
     `;
   }).join('');
+  
+  // Добавляем обработчики для кнопок раскрытия способностей
+  document.querySelectorAll('.toggle-abilities').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const idx = this.getAttribute('data-idx');
+      const fullAbilities = document.getElementById(`abilities-${idx}`);
+      if (fullAbilities.style.display === 'block') {
+        fullAbilities.style.display = 'none';
+        this.textContent = 'Показать все способности';
+      } else {
+        fullAbilities.style.display = 'block';
+        this.textContent = 'Скрыть способности';
+      }
+    });
+  });
 }
 
+// Обновленная функция fillModal без дублирования полей
 function fillModal(h){
   const img = fileCellToUrl(h[F.image]);
   els.mImg.src = img || '';
@@ -1220,9 +1396,9 @@ function fillModal(h){
   els.mAbilities.textContent = h[F.abilities] || '—';
   els.mPassive.textContent = h[F.passive] || '—';
 
+  // Убираем дублирующиеся поля и добавляем пояснения
   const order = [
     ['ID', F.id],
-    ['Герой', F.name],
     ['Стихия', F.element],
     ['Количество звезд', F.stars],
     ['Скорость маны', F.mana],
@@ -1230,18 +1406,31 @@ function fillModal(h){
     ['Атака', F.attack],
     ['Защита', F.defense],
     ['Жизни', F.hp],
-    ['Способ атаки', F.attackType],
-    ['Способности', F.abilities],
-    ['Пассивные способности', F.passive],
     ['Место призыва', F.summon],
     ['Класс', F.clazz],
     ['Картинка (URL)', F.image],
   ];
+  
   els.mAllFields.innerHTML = order.map(([label, key])=>{
     let val = h[key];
     if (key === F.image) val = fileCellToUrl(val) || '';
+    if (key === F.attackType) {
+      return `<tr><th>Способ атаки</th><td>${h[F.attackType] ? `${h[F.attackType]} (${getAttackTypeDescription(h[F.attackType])})` : '—'}</td></tr>`;
+    }
     return `<tr><th>${label}</th><td>${val ? String(val).replace(/\n/g,'<br>') : '—'}</td></tr>`;
   }).join('');
+}
+
+// Функция для описания способа атаки
+function getAttackTypeDescription(type) {
+  const descriptions = {
+    '1': 'Атака одного врага',
+    'Все': 'Атака всех врагов',
+    '1+2': 'Атака одного врага и ближайших',
+    '1+1': 'Атака одного врага, затем случайного',
+    'Все+': 'Атака всех с дополнительными эффектами'
+  };
+  return descriptions[type] || 'Стандартная атака';
 }
 
 function openModal(idx){
@@ -1266,6 +1455,10 @@ function go(delta){
 
 function applyFilters(){
   const q = els.q.value.trim().toLowerCase();
+  
+  // Обновляем выбранных героев из select
+  selected.heroes = new Set(Array.from(els.heroSelect.selectedOptions).map(opt => opt.value).filter(v => v));
+  
   viewRows = allRows.filter(r=>{
     const tName = String(r[F.name]||'').toLowerCase();
     const tAbil = String(r[F.abilities]||'').toLowerCase();
@@ -1276,7 +1469,9 @@ function applyFilters(){
     const passAtkT   = selected.attackType.size===0|| selected.attackType.has(String(r[F.attackType]));
     const passSummon = selected.summon.size===0    || selected.summon.has(String(r[F.summon]));
     const passClazz  = selected.clazz.size===0     || selected.clazz.has(String(r[F.clazz]));
-    return passQ && passElem && passStars && passMana && passAtkT && passSummon && passClazz;
+    const passHeroes = selected.heroes.size===0    || selected.heroes.has(String(r[F.name]));
+    
+    return passQ && passElem && passStars && passMana && passAtkT && passSummon && passClazz && passHeroes;
   });
 
   const by = els.sortBy.value;
@@ -1292,12 +1487,21 @@ function applyFilters(){
 
   els.count.textContent = `Найдено: ${viewRows.length}`;
   renderCards(viewRows);
+  
+  // Обновляем список героев в выпадающем списке
+  updateHeroSelect(viewRows);
 }
 
 function attachEvents(){
   [els.q, els.sortBy, els.sortDir].forEach(el=>{
     el.addEventListener('input', applyFilters);
     el.addEventListener('change', applyFilters);
+  });
+  
+  // Обновляем select героев при изменении
+  els.heroSelect.addEventListener('change', () => {
+    // Только обновляем selected.heroes, но не применяем фильтры
+    selected.heroes = new Set(Array.from(els.heroSelect.selectedOptions).map(opt => opt.value).filter(v => v));
   });
   
   document.querySelectorAll('.facet .actions button').forEach(btn=>{
@@ -1313,11 +1517,25 @@ function attachEvents(){
     els.sortBy.value = 'Сила';
     els.sortDir.value = 'desc';
     Object.keys(selected).forEach(k => selected[k].clear());
+    els.heroSelect.selectedIndex = 0;
     initAllFacets(allRows);
     applyFilters();
   });
   
+  // Кнопка "Применить"
+  els.applyFilters.addEventListener('click', () => {
+    applyFilters();
+    // Закрываем панель фильтров
+    els.filters.classList.remove('show');
+    els.filters.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+  });
+  
   els.cards.addEventListener('click', (e)=>{
+    // Проверяем, не была ли нажата кнопка раскрытия способностей
+    if (e.target.classList.contains('toggle-abilities')) {
+      return;
+    }
     const card = e.target.closest('.card');
     if (!card) return;
     const idx = Number(card.dataset.idx);
@@ -1339,7 +1557,7 @@ function attachEvents(){
     if (e.key === 'ArrowRight') go(1);
   });
   
-  // Обработка фильтров - работает одинаково на всех устройствах
+  // Обработка фильтров
   els.openFilters.addEventListener('click', ()=>{
     els.filters.classList.add('show');
     els.filters.setAttribute('aria-hidden','false');
@@ -1407,4 +1625,3 @@ Papa.parse(DATA_URL, {
 </script>
 </body>
 </html>
-
