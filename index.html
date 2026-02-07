@@ -332,13 +332,30 @@ h1 {
   padding:6px 10px; 
 }
 
-/* Кнопка Применить */
-.apply-filters-btn {
+/* Кнопка Применить фильтры */
+.apply-filters-container {
   margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+.apply-filters-btn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   font-size: 16px;
   font-weight: 600;
+  margin-bottom: 8px;
+}
+.apply-filters-mobile {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--filter-bg);
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  z-index: 1001;
+  box-shadow: 0 -2px 10px rgba(0,0,0,.1);
 }
 
 /* Десктопная панель фильтров */
@@ -393,7 +410,7 @@ h1 {
     overflow:auto; 
     background: var(--filter-bg); 
     border-radius:12px 0 0 12px;
-    padding: 20px;
+    padding: 20px 20px 80px 20px;
     box-sizing: border-box;
     margin: 0;
     box-shadow: -2px 0 15px rgba(0,0,0,.1);
@@ -406,6 +423,12 @@ h1 {
     z-index:1;
     padding-bottom: 12px;
     margin: 0;
+  }
+  .apply-filters-mobile {
+    display: block;
+  }
+  .apply-filters-container {
+    display: none;
   }
   #openFilters { 
     display: inline-block; 
@@ -1027,7 +1050,10 @@ h1 {
   .filters .panel {
     width: 95vw;
     max-width: 95vw;
-    padding: 16px;
+    padding: 16px 16px 80px 16px;
+  }
+  .apply-filters-mobile {
+    padding: 10px 12px;
   }
 }
 </style>
@@ -1138,7 +1164,14 @@ h1 {
       </div>
     </div>
     
-    <button id="applyFilters" class="btn primary apply-filters-btn">Применить фильтры</button>
+    <div class="apply-filters-container">
+      <button id="applyFilters" class="btn primary apply-filters-btn">Применить фильтры</button>
+    </div>
+  </div>
+  
+  <!-- Отдельная кнопка Применить для мобильных -->
+  <div id="applyFiltersMobile" class="apply-filters-mobile">
+    <button id="applyFiltersMobileBtn" class="btn primary apply-filters-btn" style="width: 100%;">Применить фильтры</button>
   </div>
 </aside>
 
@@ -1229,6 +1262,7 @@ const els = {
   openFilters: document.getElementById('openFilters'),
   closeFilters: document.getElementById('closeFilters'),
   applyFilters: document.getElementById('applyFilters'),
+  applyFiltersMobileBtn: document.getElementById('applyFiltersMobileBtn'),
   heroSelectToggle: document.getElementById('heroSelectToggle'),
   heroSelectText: document.getElementById('heroSelectText'),
   heroCheckboxes: document.getElementById('heroCheckboxes'),
@@ -1271,6 +1305,7 @@ let allRows = [];
 let viewRows = [];
 let currentIdx = -1;
 let allHeroNames = [];
+let filteredHeroNames = []; // Герои после применения фильтров
 
 const selected = {
   element: new Set(),
@@ -1333,9 +1368,12 @@ function updateHeroSelectDisplay() {
   }
 }
 
-// Функция для обновления чекбоксов героев
+// Функция для обновления чекбоксов героев (обновлена!)
 function updateHeroCheckboxes() {
-  els.heroCheckboxesList.innerHTML = allHeroNames.map(name => {
+  // Используем filteredHeroNames если они есть, иначе allHeroNames
+  const heroNamesToShow = filteredHeroNames.length > 0 ? filteredHeroNames : allHeroNames;
+  
+  els.heroCheckboxesList.innerHTML = heroNamesToShow.map(name => {
     const isSelected = selected.heroes.has(name);
     return `
       <div class="hero-checkbox-item">
@@ -1396,6 +1434,7 @@ function initAllFacets(rows){
   
   // Инициализация списка всех героев
   allHeroNames = uniq(rows.map(r => r[F.name])).sort(sortAlpha);
+  filteredHeroNames = [...allHeroNames]; // Изначально показываем всех героев
   updateHeroCheckboxes();
 }
 
@@ -1559,6 +1598,10 @@ function applyFilters(){
 
   els.count.textContent = `Найдено: ${viewRows.length}`;
   renderCards(viewRows);
+  
+  // Важное исправление: обновляем список доступных героев после применения фильтров
+  filteredHeroNames = uniq(viewRows.map(r => r[F.name])).sort(sortAlpha);
+  updateHeroCheckboxes();
 }
 
 function attachEvents(){
@@ -1575,7 +1618,8 @@ function attachEvents(){
   });
   
   els.selectAllHeroes.addEventListener('click', () => {
-    selected.heroes = new Set(allHeroNames);
+    // Выбираем всех героев из текущего отфильтрованного списка
+    selected.heroes = new Set(filteredHeroNames);
     updateHeroCheckboxes();
   });
   
@@ -1612,12 +1656,21 @@ function attachEvents(){
     els.sortBy.value = 'Сила';
     els.sortDir.value = 'desc';
     Object.keys(selected).forEach(k => selected[k].clear());
+    filteredHeroNames = [...allHeroNames]; // Сбрасываем фильтрацию героев
     initAllFacets(allRows);
     applyFilters();
   });
   
-  // Кнопка "Применить" в фильтрах
+  // Кнопка "Применить" в фильтрах (десктоп)
   els.applyFilters.addEventListener('click', () => {
+    applyFilters();
+    els.filters.classList.remove('show');
+    els.filters.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+  });
+  
+  // Кнопка "Применить" в фильтрах (мобильная)
+  els.applyFiltersMobileBtn.addEventListener('click', () => {
     applyFilters();
     els.filters.classList.remove('show');
     els.filters.setAttribute('aria-hidden','true');
