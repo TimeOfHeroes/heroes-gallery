@@ -56,11 +56,11 @@ header {
   box-shadow: 0 2px 10px rgba(0,0,0,.05);
 }
 .bar { 
-  display:flex; 
-  gap:12px; 
-  align-items:center; 
-  padding:12px 16px; 
-  flex-wrap:wrap;
+  display: flex; 
+  flex-wrap: wrap;
+  gap: 12px; 
+  align-items: center; 
+  padding: 12px 16px; 
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -82,11 +82,18 @@ h1 {
   text-align: left;
   font-style: italic;
 }
-.grow { 
-  flex: 1 1 240px; 
-  display:flex; 
-  gap:8px; 
-  align-items:center; 
+.header-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.search-wrapper {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
 }
 .bar input[type="search"], .bar select, .bar button { 
   font-size:14px; 
@@ -96,6 +103,7 @@ h1 {
   background: var(--card-bg);
   color: var(--text-color);
   transition: all 0.2s;
+  width: 100%;
 }
 .bar input[type="search"]:focus, .bar select:focus { 
   outline: none;
@@ -110,6 +118,7 @@ h1 {
   cursor:pointer;
   transition: all 0.2s;
   font-weight: 500;
+  white-space: nowrap;
 }
 .btn:hover {
   background: var(--secondary-color);
@@ -143,8 +152,9 @@ h1 {
 
 /* Выбор героев в верхней панели */
 .hero-select-wrapper {
-  flex: 1 1 300px;
+  flex: 1;
   min-width: 200px;
+  max-width: 300px;
   position: relative;
 }
 .hero-select-container {
@@ -164,12 +174,17 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hero-select-toggle:after {
   content: '▼';
   font-size: 12px;
   opacity: 0.6;
   transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 .hero-select-toggle.show:after {
   transform: rotate(180deg);
@@ -231,7 +246,7 @@ h1 {
   flex: 1;
   cursor: pointer;
   font-size: 14px;
-  color: var(--text-color);
+  color: var(--text-color;
 }
 .hero-select-actions {
   display: flex;
@@ -387,6 +402,9 @@ h1 {
   #openFilters { 
     display: inline-block !important;
   }
+  .hero-select-wrapper {
+    order: 0;
+  }
 }
 
 /* Мобильный оффканвас */
@@ -443,10 +461,19 @@ h1 {
   #openFilters { 
     display: inline-block; 
   }
-  .hero-select-wrapper {
-    order: -1;
+  .header-controls {
+    order: 3;
     flex-basis: 100%;
-    margin-bottom: 8px;
+    margin-top: 8px;
+  }
+  .hero-select-wrapper {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+  .search-wrapper {
+    flex: 2;
+    min-width: 0;
   }
 }
 
@@ -1073,50 +1100,129 @@ h1 {
     text-align: center;
   }
 }
+
+/* Стили для квадратных мониторов */
+@media (max-width: 1200px) and (min-height: 900px) {
+  .bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .title-container {
+    text-align: center;
+  }
+  .authors {
+    text-align: center;
+  }
+  .header-controls {
+    flex-direction: column;
+  }
+  .hero-select-wrapper,
+  .search-wrapper {
+    max-width: none;
+    width: 100%;
+  }
+  .bar input[type="search"],
+  .bar select,
+  .bar button {
+    width: 100%;
+  }
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .btn-group .btn {
+    flex: 1;
+  }
+}
+
+/* Стили для узких экранов (портретный режим) */
+@media (max-width: 600px) {
+  .bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .title-container {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .header-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hero-select-wrapper,
+  .search-wrapper {
+    width: 100%;
+  }
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+  .btn-group .btn {
+    flex: 1;
+    min-width: calc(50% - 3px);
+  }
+  #openFilters,
+  #resetAll {
+    flex: 1;
+  }
+}
 </style>
 </head>
 <body>
 <header>
 <div class="bar">
-<div class="title-container">
-  <h1>Время Героев. Галерея героев.</h1>
-  <div class="authors">Евгений Поташко и Владимир Плотников, клан "Рожденные в СССР."</div>
-</div>
-<div class="hero-select-wrapper">
-  <div class="hero-select-container">
-    <button id="heroSelectToggle" class="hero-select-toggle" aria-label="Выбор героев">
-      <span id="heroSelectText">Выберите героев...</span>
-    </button>
-    <div id="heroCheckboxes" class="hero-checkboxes">
-      <div class="hero-checkboxes-header">
-        <h3>Выберите героев</h3>
-        <span id="heroSelectedCount" class="hero-selected-count">0 выбрано</span>
-      </div>
-      <div id="heroCheckboxesList"></div>
-      <div class="hero-select-actions">
-        <button id="selectAllHeroes" class="btn">Выбрать все</button>
-        <button id="deselectAllHeroes" class="btn">Снять все</button>
-        <button id="applyHeroSelection" class="btn primary">Применить</button>
+  <div class="title-container">
+    <h1>Время Героев. Галерея героев.</h1>
+    <div class="authors">Евгений Поташко и Владимир Плотников, клан "Рожденные в СССР."</div>
+  </div>
+  
+  <div class="header-controls">
+    <div class="hero-select-wrapper">
+      <div class="hero-select-container">
+        <button id="heroSelectToggle" class="hero-select-toggle" aria-label="Выбор героев">
+          <span id="heroSelectText">Выберите героя</span>
+        </button>
+        <div id="heroCheckboxes" class="hero-checkboxes">
+          <div class="hero-checkboxes-header">
+            <h3>Выберите героев</h3>
+            <span id="heroSelectedCount" class="hero-selected-count">0 выбрано</span>
+          </div>
+          <div id="heroCheckboxesList"></div>
+          <div class="hero-select-actions">
+            <button id="selectAllHeroes" class="btn">Выбрать все</button>
+            <button id="deselectAllHeroes" class="btn">Снять все</button>
+            <button id="applyHeroSelection" class="btn primary">Применить</button>
+          </div>
+        </div>
       </div>
     </div>
+    
+    <div class="search-wrapper">
+      <input id="q" type="search" class="btn" placeholder="Поиск по имени/способности">
+    </div>
+    
+    <select id="sortBy" class="btn" title="Поле сортировки">
+      <option value="Сила" selected>Сила</option>
+      <option value="Атака">Атака</option>
+      <option value="Защита">Защита</option>
+      <option value="Жизни">Жизни</option>
+      <option value="Герой">Имя</option>
+    </select>
+    
+    <select id="sortDir" class="btn" title="Направление">
+      <option value="desc" selected>Убыв.</option>
+      <option value="asc">Возр.</option>
+    </select>
+    
+    <div class="btn-group">
+      <button id="openFilters" class="btn">Фильтры</button>
+      <button id="resetAll" class="btn">Сбросить</button>
+    </div>
   </div>
-</div>
-<div class="grow">
-<input id="q" type="search" class="btn" placeholder="Поиск по имени/способностям">
-</div>
-<select id="sortBy" class="btn" title="Поле сортировки">
-<option value="Сила" selected>Сила</option>
-<option value="Атака">Атака</option>
-<option value="Защита">Защита</option>
-<option value="Жизни">Жизни</option>
-<option value="Герой">Имя</option>
-</select>
-<select id="sortDir" class="btn" title="Направление">
-<option value="desc" selected>Убыв.</option>
-<option value="asc">Возр.</option>
-</select>
-<button id="openFilters" class="btn">Фильтры</button>
-<button id="resetAll" class="btn">Сбросить</button>
 </div>
 </header>
 
@@ -1229,7 +1335,8 @@ h1 {
     <div class="clan">
       <strong>Разработано:</strong><br>
       Евгений Поташко и Владимир Плотников<br>
-      <strong>Клан: "Рожденные в СССР."</strong>
+      <strong>Клан: "Рожденные в СССР."</strong><br>
+      скрины героев предоставлены великим и могучим Козырем
     </div>
     <div class="contact">
       <strong>Обратная связь:</strong><br>
@@ -1366,7 +1473,7 @@ function updateHeroSelectDisplay() {
   els.heroSelectedCount.textContent = `${count} выбрано`;
   
   if (count === 0) {
-    els.heroSelectText.textContent = 'Выберите героев...';
+    els.heroSelectText.textContent = 'Выберите героя';
   } else if (count === 1) {
     const heroName = Array.from(selected.heroes)[0];
     els.heroSelectText.textContent = heroName;
@@ -1772,4 +1879,3 @@ Papa.parse(DATA_URL, {
 </script>
 </body>
 </html>
-
