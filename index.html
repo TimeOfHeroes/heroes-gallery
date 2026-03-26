@@ -1311,59 +1311,45 @@ function getTalentDescriptionById(talentId) {
     
     let desc = '';
     
-    // Специальная обработка для Кровавого вихря
     if (typeName === 'Кровавый вихрь') {
         desc = 'Кровавый вихрь: +' + value + suffix + ' шанс вызвать кровотечение при обычной атаке. Наносит 60% урона каждый ход в течение 5 ходов.';
     } 
-    // Специальная обработка для Исцеления
     else if (typeName === 'Исцеление') {
         desc = 'Исцеление: эффективность лечения +' + value + suffix;
     }
-    // Специальная обработка для Крита
     else if (typeName === 'Крит') {
         desc = 'Шанс критического удара +' + value + suffix;
     }
-    // Специальная обработка для скорости маны
     else if (typeName === 'Бонус к скорости набора маны') {
         desc = 'Скорость набора маны +' + value + suffix;
     }
-    // Специальная обработка для уклонения
     else if (typeName === 'Шанс уклониться') {
         desc = 'Уклонение +' + value + suffix;
     }
-    // Специальная обработка для стойкости
     else if (typeName === 'Стойкость') {
         desc = 'Стойкость (шанс избежать ослабления) +' + value + suffix;
     }
-    // Специальная обработка для подавления магии
     else if (typeName === 'Подавление магии') {
         desc = 'Подавление магии (шанс заблокировать урон от навыков) +' + value + suffix;
     }
-    // Специальная обработка для концентрации
     else if (typeName === 'Концентрация') {
         desc = 'Концентрация (шанс снять ослабление при использовании навыка) +' + value + suffix;
     }
-    // Специальная обработка для магического разряда
     else if (typeName === 'Магический разряд') {
         desc = 'Магический разряд (урон по врагу при использовании навыка) +' + value + suffix;
     }
-    // Специальная обработка для непоколебимости
     else if (typeName === 'Непоколебимость') {
         desc = 'Непоколебимость (снижение получаемого урона) +' + value + suffix;
     }
-    // Специальная обработка для природного зова
     else if (typeName === 'Природный зов') {
         desc = 'Природный зов (шанс призвать помощника) +' + value + suffix;
     }
-    // Специальная обработка для второго дыхания
     else if (typeName === 'Второе дыхание') {
         desc = 'Второе дыхание (восстановление здоровья при критическом здоровье) +' + value + suffix;
     }
-    // Специальная обработка для пробития
     else if (typeName === 'Пробитие') {
         desc = 'Пробитие (игнорирование защиты) +' + value + suffix;
     }
-    // Обычная обработка для остальных
     else if (typeName === 'Атака') {
         desc = 'Атака +' + value + suffix;
     }
@@ -1436,16 +1422,28 @@ function getTalentValue(talentId, statType, baseStat) {
     return value;
 }
 
-function calculateStatsWithSelections(hero, selections) {
+function calculateStatsWithSelections(hero, selections, mode) {
     const heroClass = hero[HERO_FIELDS.clazz];
     const baseAttack = toNum(hero[HERO_FIELDS.attack]) || 0;
     const baseDefense = toNum(hero[HERO_FIELDS.defense]) || 0;
     const baseHp = toNum(hero[HERO_FIELDS.hp]) || 0;
+    
+    // Если режим "none" — возвращаем базовые характеристики без учёта талантов
+    if (mode === 'none') {
+        return { 
+            attack: Math.floor(baseAttack), 
+            defense: Math.floor(baseDefense), 
+            hp: Math.floor(baseHp) 
+        };
+    }
+    
     if (!classTalents[heroClass]) {
         return { attack: Math.floor(baseAttack), defense: Math.floor(baseDefense), hp: Math.floor(baseHp) };
     }
+    
     const talents = classTalents[heroClass];
     let attackFlat = 0, attackPercent = 0, defenseFlat = 0, defensePercent = 0, hpFlat = 0, hpPercent = 0;
+    
     const groups = [];
     let currentGroup = [];
     for (const talent of talents) {
@@ -1457,8 +1455,11 @@ function calculateStatsWithSelections(hero, selections) {
         }
     }
     if (currentGroup.length > 0) groups.push(currentGroup);
+    
     for (const group of groups) {
         const groupId = group[0].branchGroup;
+        
+        // Обязательные таланты применяются только если режим не "none"
         for (const talent of group) {
             if (talent.isMandatory && talent.centerTalentId) {
                 const effects = getTalentEffects(talent.centerTalentId);
@@ -1470,6 +1471,7 @@ function calculateStatsWithSelections(hero, selections) {
                 hpFlat += effects.hpFlat;
             }
         }
+        
         const selectedSide = selections[groupId];
         if (selectedSide) {
             for (const talent of group) {
@@ -1490,9 +1492,11 @@ function calculateStatsWithSelections(hero, selections) {
             }
         }
     }
+    
     const attackBonus = (baseAttack * attackPercent / 100) + attackFlat;
     const defenseBonus = (baseDefense * defensePercent / 100) + defenseFlat;
     const hpBonus = (baseHp * hpPercent / 100) + hpFlat;
+    
     return {
         attack: Math.floor(baseAttack + attackBonus),
         defense: Math.floor(baseDefense + defenseBonus),
@@ -1500,12 +1504,42 @@ function calculateStatsWithSelections(hero, selections) {
     };
 }
 
+function getTalentType(talentId) {
+    const talent = talentEffectsMap[talentId];
+    return talent ? talent.type : '';
+}
+
+function calculateDefenseScore(talentId, baseDefense, baseHp) {
+    const talent = talentEffectsMap[talentId];
+    if (!talent) return 0;
+    
+    const isPercent = talent.isPercent;
+    const value = talent.value;
+    const typeLower = talent.type.toLowerCase();
+    
+    // Для атаки, скорости маны, крита и остальных считаем "полезность"
+    if (typeLower.includes('атак')) {
+        return value * 1.0; // атака
+    }
+    else if (typeLower.includes('бонус к скорости набора маны') || typeLower.includes('скорость маны')) {
+        return value * 0.9; // скорость маны
+    }
+    else if (typeLower.includes('крит')) {
+        return value * 0.8; // крит
+    }
+    else {
+        return value * 0.5; // всё остальное
+    }
+}
+
 function getOptimalSelections(hero, mode) {
     const heroClass = hero[HERO_FIELDS.clazz];
     if (!classTalents[heroClass]) return {};
     const baseAttack = toNum(hero[HERO_FIELDS.attack]) || 0;
     const baseDefense = toNum(hero[HERO_FIELDS.defense]) || 0;
+    const baseHp = toNum(hero[HERO_FIELDS.hp]) || 0;
     const talents = classTalents[heroClass];
+    
     const groups = [];
     let currentGroup = [];
     for (const talent of talents) {
@@ -1517,37 +1551,96 @@ function getOptimalSelections(hero, mode) {
         }
     }
     if (currentGroup.length > 0) groups.push(currentGroup);
+    
     const selections = {};
+    
     for (const group of groups) {
         const groupId = group[0].branchGroup;
-        let bestValue = -1;
-        let bestSide = null;
-        const statType = mode === 'attack' ? 'attack' : 'defense';
-        const baseStat = mode === 'attack' ? baseAttack : baseDefense;
-        for (const talent of group) {
-            if (!talent.isMandatory) {
-                if (talent.leftTalentId) {
-                    const value = getTalentValue(talent.leftTalentId, statType, baseStat);
-                    if (value > bestValue) {
-                        bestValue = value;
-                        bestSide = 'left';
+        
+        if (mode === 'attack') {
+            let bestValue = -1;
+            let bestSide = null;
+            for (const talent of group) {
+                if (!talent.isMandatory) {
+                    if (talent.leftTalentId) {
+                        const value = getTalentValue(talent.leftTalentId, 'attack', baseAttack);
+                        if (value > bestValue) {
+                            bestValue = value;
+                            bestSide = 'left';
+                        }
                     }
-                }
-                if (talent.rightTalentId) {
-                    const value = getTalentValue(talent.rightTalentId, statType, baseStat);
-                    if (value > bestValue) {
-                        bestValue = value;
-                        bestSide = 'right';
+                    if (talent.rightTalentId) {
+                        const value = getTalentValue(talent.rightTalentId, 'attack', baseAttack);
+                        if (value > bestValue) {
+                            bestValue = value;
+                            bestSide = 'right';
+                        }
                     }
                 }
             }
-        }
-        if (bestSide !== null) {
-            selections[groupId] = bestSide;
-        } else {
-            selections[groupId] = mode === 'attack' ? 'left' : 'right';
+            if (bestSide !== null) {
+                selections[groupId] = bestSide;
+            } else {
+                selections[groupId] = 'left';
+            }
+        } 
+        else if (mode === 'defense') {
+            let hasDefenseTalent = false;
+            let defenseSide = null;
+            let healthSide = null;
+            let bestOtherScore = -1;
+            let bestOtherSide = null;
+            
+            for (const talent of group) {
+                if (!talent.isMandatory) {
+                    // Проверяем левый талант
+                    if (talent.leftTalentId) {
+                        const typeLower = getTalentType(talent.leftTalentId).toLowerCase();
+                        if (typeLower.includes('защит')) {
+                            hasDefenseTalent = true;
+                            defenseSide = 'left';
+                        } else if (typeLower.includes('жизн') || typeLower.includes('здоров')) {
+                            healthSide = 'left';
+                        } else {
+                            const score = calculateDefenseScore(talent.leftTalentId, baseDefense, baseHp);
+                            if (score > bestOtherScore) {
+                                bestOtherScore = score;
+                                bestOtherSide = 'left';
+                            }
+                        }
+                    }
+                    // Проверяем правый талант
+                    if (talent.rightTalentId) {
+                        const typeLower = getTalentType(talent.rightTalentId).toLowerCase();
+                        if (typeLower.includes('защит')) {
+                            hasDefenseTalent = true;
+                            defenseSide = 'right';
+                        } else if (typeLower.includes('жизн') || typeLower.includes('здоров')) {
+                            healthSide = 'right';
+                        } else {
+                            const score = calculateDefenseScore(talent.rightTalentId, baseDefense, baseHp);
+                            if (score > bestOtherScore) {
+                                bestOtherScore = score;
+                                bestOtherSide = 'right';
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Приоритет: сначала защита, потом здоровье, потом всё остальное
+            if (hasDefenseTalent && defenseSide !== null) {
+                selections[groupId] = defenseSide;
+            } else if (healthSide !== null) {
+                selections[groupId] = healthSide;
+            } else if (bestOtherSide !== null) {
+                selections[groupId] = bestOtherSide;
+            } else {
+                selections[groupId] = 'left';
+            }
         }
     }
+    
     return selections;
 }
 
@@ -1575,15 +1668,12 @@ function renderTalentTree(hero, selections, mode) {
     const showActive = mode !== 'none';
     const isManual = mode === 'manual';
     
-    // Определяем, какие группы уже открыты (имеют выбранный талант)
-    // В ручном режиме нельзя выбрать следующую группу, пока не выбрана предыдущая
     let maxSelectableGroup = 0;
     if (isManual) {
-        // Находим последнюю группу, в которой есть выбор
         for (let i = 0; i < groups.length; i++) {
             const groupId = groups[i][0].branchGroup;
             if (selections[groupId]) {
-                maxSelectableGroup = i + 1; // следующая группа становится доступной
+                maxSelectableGroup = i + 1;
             } else {
                 break;
             }
@@ -1594,13 +1684,11 @@ function renderTalentTree(hero, selections, mode) {
         const group = groups[gIdx];
         const groupId = group[0].branchGroup;
         const selectedSide = selections[groupId];
-        // Определяем, можно ли выбирать в этой группе
         const isGroupSelectable = isManual ? (gIdx <= maxSelectableGroup) : true;
         
         for (const talent of group) {
             html += '<div class="talent-row">';
             
-            // Левая колонка
             if (talent.leftTalentId) {
                 const isActive = showActive && selectedSide === 'left';
                 const imgUrl = getTalentImage(talent.leftTalentId, isActive);
@@ -1615,7 +1703,6 @@ function renderTalentTree(hero, selections, mode) {
                 html += '<div class="talent-cell" style="background:transparent; border-color:transparent;"></div>';
             }
             
-            // Центральная колонка (обязательная)
             if (talent.centerTalentId) {
                 const imgUrl = getTalentImage(talent.centerTalentId, true);
                 html += `<div class="talent-cell mandatory" data-talent-id="${talent.centerTalentId}" data-row="${rowCounter}">`;
@@ -1626,7 +1713,6 @@ function renderTalentTree(hero, selections, mode) {
                 html += '<div class="talent-cell" style="background:transparent; border-color:transparent;"></div>';
             }
             
-            // Правая колонка
             if (talent.rightTalentId) {
                 const isActive = showActive && selectedSide === 'right';
                 const imgUrl = getTalentImage(talent.rightTalentId, isActive);
@@ -1648,7 +1734,6 @@ function renderTalentTree(hero, selections, mode) {
     
     document.getElementById('talentTable').innerHTML = html;
     
-    // Добавляем обработчики для всплывающих подсказок (на все таланты)
     document.querySelectorAll('#talentTable .talent-cell').forEach(cell => {
         const talentId = parseInt(cell.dataset.talentId);
         if (talentId) {
@@ -1662,10 +1747,8 @@ function renderTalentTree(hero, selections, mode) {
         }
     });
     
-    // Добавляем обработчики кликов только для доступных талантов в ручном режиме
     if (isManual) {
         document.querySelectorAll('#talentTable .talent-cell.selectable').forEach(cell => {
-            // Убираем обработчик если ячейка отключена
             if (cell.dataset.disabled === 'true') {
                 cell.style.opacity = '0.5';
                 cell.style.cursor = 'not-allowed';
@@ -1681,7 +1764,6 @@ function renderTalentTree(hero, selections, mode) {
                 
                 if (!groupId || !side) return;
                 
-                // Проверяем, можно ли выбрать эту группу (не пропущена ли предыдущая)
                 let allPreviousSelected = true;
                 for (let i = 0; i < groupIdx; i++) {
                     const prevGroupId = groups[i][0].branchGroup;
@@ -1692,7 +1774,6 @@ function renderTalentTree(hero, selections, mode) {
                 }
                 
                 if (!allPreviousSelected) {
-                    // Показываем уведомление, что нужно сначала выбрать предыдущие таланты
                     const msg = document.createElement('div');
                     msg.textContent = '⚠️ Сначала выберите таланты в предыдущих строках!';
                     msg.style.position = 'fixed';
@@ -1711,7 +1792,6 @@ function renderTalentTree(hero, selections, mode) {
                     return;
                 }
                 
-                // Деактивируем все ячейки в этой группе
                 const groupCells = document.querySelectorAll(`#talentTable .talent-cell[data-group="${groupId}"]`);
                 groupCells.forEach(c => {
                     if (!c.classList.contains('mandatory')) {
@@ -1725,13 +1805,11 @@ function renderTalentTree(hero, selections, mode) {
                     }
                 });
                 
-                // Активируем выбранную ветку
                 const newImgUrl = getTalentImage(talentId, true);
                 const img = cell.querySelector('img');
                 if (img && newImgUrl) img.src = newImgUrl;
                 cell.classList.add('active');
                 
-                // Активируем все ячейки той же ветки в этой группе
                 const sameSideCells = document.querySelectorAll(`#talentTable .talent-cell[data-group="${groupId}"][data-side="${side}"]`);
                 sameSideCells.forEach(c => {
                     if (!c.classList.contains('mandatory')) {
@@ -1745,17 +1823,14 @@ function renderTalentTree(hero, selections, mode) {
                     }
                 });
                 
-                // Обновляем selection
                 currentHeroTalents[groupId] = side;
                 
-                // Обновляем характеристики в основном окне
                 const heroData = viewHeroes[currentIdx];
                 if (heroData) {
-                    const calc = calculateStatsWithSelections(heroData, currentHeroTalents);
+                    const calc = calculateStatsWithSelections(heroData, currentHeroTalents, currentMode);
                     document.getElementById('mStats').innerHTML = '<span class="pill">С: ' + heroData[HERO_FIELDS.power] + '</span><span class="pill">А: ' + calc.attack + '</span><span class="pill">З: ' + calc.defense + '</span><span class="pill">Ж: ' + calc.hp + '</span>';
                 }
                 
-                // Перерисовываем дерево, чтобы обновить доступность следующих групп
                 renderTalentTree(heroData, currentHeroTalents, currentMode);
             });
         });
@@ -1839,7 +1914,7 @@ function updateMainModalStats() {
     } else if (currentMode === 'manual') {
         selections = currentHeroTalents;
     }
-    const calc = calculateStatsWithSelections(hero, selections);
+    const calc = calculateStatsWithSelections(hero, selections, currentMode);
     document.getElementById('mStats').innerHTML = '<span class="pill">С: ' + hero[HERO_FIELDS.power] + '</span><span class="pill">А: ' + calc.attack + '</span><span class="pill">З: ' + calc.defense + '</span><span class="pill">Ж: ' + calc.hp + '</span>';
     if (document.getElementById('treePanel').classList.contains('show')) {
         renderTalentTree(hero, currentHeroTalents, currentMode);
@@ -1945,7 +2020,7 @@ function fillModal(hero) {
     document.getElementById('mMeta2').innerHTML = '<span>' + hero[HERO_FIELDS.attackType] + '</span> <span>' + hero[HERO_FIELDS.summon] + '</span> <span>' + hero[HERO_FIELDS.clazz] + '</span>';
     const container = document.getElementById('modalImageContainer');
     container.setAttribute('data-element', hero[HERO_FIELDS.element] || '');
-    const calc = calculateStatsWithSelections(hero, currentHeroTalents);
+    const calc = calculateStatsWithSelections(hero, currentHeroTalents, 'none');
     document.getElementById('mStats').innerHTML = '<span class="pill">С: ' + hero[HERO_FIELDS.power] + '</span><span class="pill">А: ' + calc.attack + '</span><span class="pill">З: ' + calc.defense + '</span><span class="pill">Ж: ' + calc.hp + '</span>';
     document.getElementById('mAbilities').textContent = String(hero[HERO_FIELDS.abilities] || '—').replace(/^'|'$/g, '');
     document.getElementById('mPassive').textContent = String(hero[HERO_FIELDS.passive] || '—').replace(/^'|'$/g, '');
