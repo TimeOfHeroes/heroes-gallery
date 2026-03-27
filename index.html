@@ -45,6 +45,7 @@
   --talent-hover-bg: rgba(255, 235, 59, 0.5);
   --tooltip-bg: #2d2d2d;
   --tooltip-text: #fff;
+  --overlay-bg: rgba(0,0,0,0.5);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -84,6 +85,7 @@
     --talent-hover-bg: rgba(184, 134, 11, 0.5);
     --tooltip-bg: #1a1a1a;
     --tooltip-text: #eee;
+    --overlay-bg: rgba(0,0,0,0.7);
   }
 }
 
@@ -94,9 +96,26 @@ body {
   background: var(--bg-color); 
   color: var(--text-color);
   line-height: 1.4;
+  overflow-x: hidden;
 }
 
-/* Tooltip для талантов - без стрелочки */
+.filter-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-bg);
+  z-index: 98;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.filter-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
 .talent-tooltip {
   position: fixed;
   background: var(--tooltip-bg);
@@ -311,7 +330,7 @@ header {
 .right-group {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -443,7 +462,7 @@ header {
 }
 
 .info-btn-wrapper {
-  margin-left: 8px;
+  margin-left: 0;
 }
 .info-btn {
   width: 40px;
@@ -459,7 +478,7 @@ header {
   justify-content: center;
   transition: all 0.2s;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
 }
 .info-btn:hover {
   background: var(--secondary-color);
@@ -469,16 +488,16 @@ header {
   .top-bar { flex-direction: column; align-items: stretch; }
   .brand { text-align: center; }
   .center-group { max-width: none; }
-  .right-group { justify-content: space-between; }
-  .sort-group { flex: 1; }
-  .sort-select-wrapper { flex: 1; }
-  .sort-select-wrapper select { width: 100%; }
+  .right-group { justify-content: flex-start; }
+  .sort-group { flex: 0; }
+  .sort-select-wrapper { flex: 0; }
+  .sort-select-wrapper select { width: auto; }
 }
 
 @media (max-width: 640px) {
   .center-group { flex-direction: column; }
-  .right-group { flex-direction: column; align-items: stretch; }
-  .filter-buttons { justify-content: space-between; }
+  .right-group { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; }
+  .filter-buttons { justify-content: flex-start; }
 }
 
 .wrap { 
@@ -496,11 +515,11 @@ header {
   box-shadow: 0 2px 10px rgba(0,0,0,.05);
   width: 320px;
   position: fixed;
-  top: var(--hdrH);
+  top: 0;
   left: 0;
   bottom: 0;
-  max-height: calc(100vh - var(--hdrH));
-  overflow: hidden;
+  height: 100vh;
+  overflow-y: auto;
   z-index: 99;
   border-radius: 0 12px 12px 0;
   transform: translateX(-100%);
@@ -512,7 +531,7 @@ header {
   display: block;
 }
 .filters .panel { 
-  padding:16px; 
+  padding: 0 16px 16px 16px;
   background: var(--filter-bg);
   display: flex;
   flex-direction: column;
@@ -521,17 +540,35 @@ header {
 }
 .filters .head { 
   display:flex; 
-  align-items:center; 
-  justify-content:space-between; 
-  margin-bottom:16px;
-  padding-bottom: 12px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: var(--filter-bg);
+  z-index: 10;
+  margin: 0;
+  gap: 8px;
 }
-.filters h2 { 
-  margin:0; 
-  font-size:18px; 
+.filters .head h2 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
+  text-align: center;
+}
+.filters .head-buttons {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+}
+.filters .head-buttons .btn {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 .facet { 
   margin-bottom:20px; 
@@ -1030,6 +1067,12 @@ header {
   }
 }
 
+@media (max-width: 768px) {
+  .filters {
+    width: 85%;
+  }
+}
+
 .info-modal {
   position: fixed;
   inset: 0;
@@ -1107,7 +1150,7 @@ header {
   <div class="container">
     <div class="top-bar">
       <div class="brand">
-        <h1>Время Героев. Галерея героев с талантами.</h1>
+        <h1>Галерея героев</h1>
         <div class="copyright">Евгений Поташко и Владимир Плотников, клан "Рожденные в СССР."</div>
       </div>
       <div class="center-group">
@@ -1142,9 +1185,17 @@ header {
   </div>
 </header>
 
+<div id="filterOverlay" class="filter-overlay"></div>
+
 <aside id="filters" class="filters">
 <div class="panel">
-<div class="head"><h2>Фильтры</h2><div style="display: flex; gap: 8px;"><button id="applyFiltersBtn" class="btn primary">Применить</button><button id="closeFilters" class="btn">Закрыть</button></div></div>
+<div class="head">
+  <h2>Фильтры</h2>
+  <div class="head-buttons">
+    <button id="applyFiltersBtn" class="btn primary">Применить</button>
+    <button id="closeFilters" class="btn">Закрыть</button>
+  </div>
+</div>
 <div class="facet" data-facet="element"><h3>Стихия</h3><div class="opts" id="facet-element"></div><div class="actions"><button class="btn" data-action="all" data-facet="element">Все</button><button class="btn" data-action="none" data-facet="element">Снять</button></div></div>
 <div class="facet" data-facet="stars"><h3>Количество звезд</h3><div class="opts" id="facet-stars"></div><div class="actions"><button class="btn" data-action="all" data-facet="stars">Все</button><button class="btn" data-action="none" data-facet="stars">Снять</button></div></div>
 <div class="facet" data-facet="mana"><h3>Скорость маны</h3><div class="opts" id="facet-mana"></div><div class="actions"><button class="btn" data-action="all" data-facet="mana">Все</button><button class="btn" data-action="none" data-facet="mana">Снять</button></div></div>
@@ -1208,7 +1259,7 @@ header {
   <div class="info-dialog">
     <button id="infoClose" class="info-close">×</button>
     <h2>О галерее героев</h2>
-    <p>Эта галерея содержит информацию о героях игры "Время Героев", их характеристиках, способностях и древе талантов.</p>
+    <p>Эта галерея содержит информацию о героях игры "Время Героев", их характеристиках и способностях.</p>
     <div class="clan">
       <strong>Разработано:</strong><br>
       Евгений Поташко и Владимир Плотников<br>
@@ -1243,8 +1294,6 @@ let currentMode = 'none';
 
 let isDragging = false;
 let dragStartX = 0, dragStartY = 0;
-
-// Tooltip элементы
 let tooltipElement = null;
 
 function initTooltip() {
@@ -1311,59 +1360,45 @@ function getTalentDescriptionById(talentId) {
     
     let desc = '';
     
-    // Специальная обработка для Кровавого вихря
     if (typeName === 'Кровавый вихрь') {
         desc = 'Кровавый вихрь: +' + value + suffix + ' шанс вызвать кровотечение при обычной атаке. Наносит 60% урона каждый ход в течение 5 ходов.';
     } 
-    // Специальная обработка для Исцеления
     else if (typeName === 'Исцеление') {
         desc = 'Исцеление: эффективность лечения +' + value + suffix;
     }
-    // Специальная обработка для Крита
     else if (typeName === 'Крит') {
         desc = 'Шанс критического удара +' + value + suffix;
     }
-    // Специальная обработка для скорости маны
     else if (typeName === 'Бонус к скорости набора маны') {
         desc = 'Скорость набора маны +' + value + suffix;
     }
-    // Специальная обработка для уклонения
     else if (typeName === 'Шанс уклониться') {
         desc = 'Уклонение +' + value + suffix;
     }
-    // Специальная обработка для стойкости
     else if (typeName === 'Стойкость') {
         desc = 'Стойкость (шанс избежать ослабления) +' + value + suffix;
     }
-    // Специальная обработка для подавления магии
     else if (typeName === 'Подавление магии') {
         desc = 'Подавление магии (шанс заблокировать урон от навыков) +' + value + suffix;
     }
-    // Специальная обработка для концентрации
     else if (typeName === 'Концентрация') {
         desc = 'Концентрация (шанс снять ослабление при использовании навыка) +' + value + suffix;
     }
-    // Специальная обработка для магического разряда
     else if (typeName === 'Магический разряд') {
         desc = 'Магический разряд (урон по врагу при использовании навыка) +' + value + suffix;
     }
-    // Специальная обработка для непоколебимости
     else if (typeName === 'Непоколебимость') {
         desc = 'Непоколебимость (снижение получаемого урона) +' + value + suffix;
     }
-    // Специальная обработка для природного зова
     else if (typeName === 'Природный зов') {
         desc = 'Природный зов (шанс призвать помощника) +' + value + suffix;
     }
-    // Специальная обработка для второго дыхания
     else if (typeName === 'Второе дыхание') {
         desc = 'Второе дыхание (восстановление здоровья при критическом здоровье) +' + value + suffix;
     }
-    // Специальная обработка для пробития
     else if (typeName === 'Пробитие') {
         desc = 'Пробитие (игнорирование защиты) +' + value + suffix;
     }
-    // Обычная обработка для остальных
     else if (typeName === 'Атака') {
         desc = 'Атака +' + value + suffix;
     }
@@ -1436,16 +1471,79 @@ function getTalentValue(talentId, statType, baseStat) {
     return value;
 }
 
-function calculateStatsWithSelections(hero, selections) {
+function getBranchScore(branchTalents, mode, baseAttack, baseDefense, baseHp) {
+    let hasDefense = false;
+    let hasHealth = false;
+    let hasAttack = false;
+    let totalValue = 0;
+    
+    for (const talentId of branchTalents) {
+        if (!talentId) continue;
+        const talent = talentEffectsMap[talentId];
+        if (!talent) continue;
+        
+        const typeName = talent.type;
+        const isPercent = talent.isPercent;
+        const value = talent.value;
+        
+        let actualValue = 0;
+        if (isPercent) {
+            if (typeName === 'Атака') actualValue = baseAttack * value / 100;
+            else if (typeName === 'Защита') actualValue = baseDefense * value / 100;
+            else if (typeName === 'Жизни') actualValue = baseHp * value / 100;
+            else actualValue = value;
+        } else {
+            actualValue = value;
+        }
+        
+        totalValue += actualValue;
+        
+        if (typeName === 'Защита') hasDefense = true;
+        if (typeName === 'Жизни') hasHealth = true;
+        if (typeName === 'Атака') hasAttack = true;
+    }
+    
+    if (mode === 'attack') {
+        if (hasAttack && hasDefense) return 100000 + totalValue;
+        if (hasAttack) return 90000 + totalValue;
+        if (hasDefense) return 80000 + totalValue;
+        if (hasHealth) return 70000 + totalValue;
+        return 60000 + totalValue;
+    } 
+    else if (mode === 'defense') {
+        if (hasDefense) {
+            if (hasHealth) return 100000 + totalValue;
+            return 90000 + totalValue;
+        }
+        if (hasHealth) return 70000 + totalValue;
+        if (hasAttack) return 60000 + totalValue;
+        return 50000 + totalValue;
+    }
+    
+    return 0;
+}
+
+function calculateStatsWithSelections(hero, selections, mode) {
     const heroClass = hero[HERO_FIELDS.clazz];
     const baseAttack = toNum(hero[HERO_FIELDS.attack]) || 0;
     const baseDefense = toNum(hero[HERO_FIELDS.defense]) || 0;
     const baseHp = toNum(hero[HERO_FIELDS.hp]) || 0;
+    
+    if (mode === 'none') {
+        return { 
+            attack: Math.floor(baseAttack), 
+            defense: Math.floor(baseDefense), 
+            hp: Math.floor(baseHp) 
+        };
+    }
+    
     if (!classTalents[heroClass]) {
         return { attack: Math.floor(baseAttack), defense: Math.floor(baseDefense), hp: Math.floor(baseHp) };
     }
+    
     const talents = classTalents[heroClass];
     let attackFlat = 0, attackPercent = 0, defenseFlat = 0, defensePercent = 0, hpFlat = 0, hpPercent = 0;
+    
     const groups = [];
     let currentGroup = [];
     for (const talent of talents) {
@@ -1457,8 +1555,10 @@ function calculateStatsWithSelections(hero, selections) {
         }
     }
     if (currentGroup.length > 0) groups.push(currentGroup);
+    
     for (const group of groups) {
         const groupId = group[0].branchGroup;
+        
         for (const talent of group) {
             if (talent.isMandatory && talent.centerTalentId) {
                 const effects = getTalentEffects(talent.centerTalentId);
@@ -1470,6 +1570,7 @@ function calculateStatsWithSelections(hero, selections) {
                 hpFlat += effects.hpFlat;
             }
         }
+        
         const selectedSide = selections[groupId];
         if (selectedSide) {
             for (const talent of group) {
@@ -1490,9 +1591,11 @@ function calculateStatsWithSelections(hero, selections) {
             }
         }
     }
+    
     const attackBonus = (baseAttack * attackPercent / 100) + attackFlat;
     const defenseBonus = (baseDefense * defensePercent / 100) + defenseFlat;
     const hpBonus = (baseHp * hpPercent / 100) + hpFlat;
+    
     return {
         attack: Math.floor(baseAttack + attackBonus),
         defense: Math.floor(baseDefense + defenseBonus),
@@ -1505,7 +1608,9 @@ function getOptimalSelections(hero, mode) {
     if (!classTalents[heroClass]) return {};
     const baseAttack = toNum(hero[HERO_FIELDS.attack]) || 0;
     const baseDefense = toNum(hero[HERO_FIELDS.defense]) || 0;
+    const baseHp = toNum(hero[HERO_FIELDS.hp]) || 0;
     const talents = classTalents[heroClass];
+    
     const groups = [];
     let currentGroup = [];
     for (const talent of talents) {
@@ -1517,37 +1622,38 @@ function getOptimalSelections(hero, mode) {
         }
     }
     if (currentGroup.length > 0) groups.push(currentGroup);
+    
     const selections = {};
+    
     for (const group of groups) {
         const groupId = group[0].branchGroup;
-        let bestValue = -1;
-        let bestSide = null;
-        const statType = mode === 'attack' ? 'attack' : 'defense';
-        const baseStat = mode === 'attack' ? baseAttack : baseDefense;
+        
+        let leftBranchTalents = [];
+        let rightBranchTalents = [];
+        
         for (const talent of group) {
             if (!talent.isMandatory) {
                 if (talent.leftTalentId) {
-                    const value = getTalentValue(talent.leftTalentId, statType, baseStat);
-                    if (value > bestValue) {
-                        bestValue = value;
-                        bestSide = 'left';
-                    }
+                    leftBranchTalents.push(talent.leftTalentId);
                 }
                 if (talent.rightTalentId) {
-                    const value = getTalentValue(talent.rightTalentId, statType, baseStat);
-                    if (value > bestValue) {
-                        bestValue = value;
-                        bestSide = 'right';
-                    }
+                    rightBranchTalents.push(talent.rightTalentId);
                 }
             }
         }
-        if (bestSide !== null) {
-            selections[groupId] = bestSide;
+        
+        const leftScore = getBranchScore(leftBranchTalents, mode, baseAttack, baseDefense, baseHp);
+        const rightScore = getBranchScore(rightBranchTalents, mode, baseAttack, baseDefense, baseHp);
+        
+        if (leftScore > rightScore) {
+            selections[groupId] = 'left';
+        } else if (rightScore > leftScore) {
+            selections[groupId] = 'right';
         } else {
-            selections[groupId] = mode === 'attack' ? 'left' : 'right';
+            selections[groupId] = 'left';
         }
     }
+    
     return selections;
 }
 
@@ -1575,15 +1681,12 @@ function renderTalentTree(hero, selections, mode) {
     const showActive = mode !== 'none';
     const isManual = mode === 'manual';
     
-    // Определяем, какие группы уже открыты (имеют выбранный талант)
-    // В ручном режиме нельзя выбрать следующую группу, пока не выбрана предыдущая
     let maxSelectableGroup = 0;
     if (isManual) {
-        // Находим последнюю группу, в которой есть выбор
         for (let i = 0; i < groups.length; i++) {
             const groupId = groups[i][0].branchGroup;
             if (selections[groupId]) {
-                maxSelectableGroup = i + 1; // следующая группа становится доступной
+                maxSelectableGroup = i + 1;
             } else {
                 break;
             }
@@ -1594,13 +1697,11 @@ function renderTalentTree(hero, selections, mode) {
         const group = groups[gIdx];
         const groupId = group[0].branchGroup;
         const selectedSide = selections[groupId];
-        // Определяем, можно ли выбирать в этой группе
         const isGroupSelectable = isManual ? (gIdx <= maxSelectableGroup) : true;
         
         for (const talent of group) {
             html += '<div class="talent-row">';
             
-            // Левая колонка
             if (talent.leftTalentId) {
                 const isActive = showActive && selectedSide === 'left';
                 const imgUrl = getTalentImage(talent.leftTalentId, isActive);
@@ -1615,7 +1716,6 @@ function renderTalentTree(hero, selections, mode) {
                 html += '<div class="talent-cell" style="background:transparent; border-color:transparent;"></div>';
             }
             
-            // Центральная колонка (обязательная)
             if (talent.centerTalentId) {
                 const imgUrl = getTalentImage(talent.centerTalentId, true);
                 html += `<div class="talent-cell mandatory" data-talent-id="${talent.centerTalentId}" data-row="${rowCounter}">`;
@@ -1626,7 +1726,6 @@ function renderTalentTree(hero, selections, mode) {
                 html += '<div class="talent-cell" style="background:transparent; border-color:transparent;"></div>';
             }
             
-            // Правая колонка
             if (talent.rightTalentId) {
                 const isActive = showActive && selectedSide === 'right';
                 const imgUrl = getTalentImage(talent.rightTalentId, isActive);
@@ -1648,7 +1747,6 @@ function renderTalentTree(hero, selections, mode) {
     
     document.getElementById('talentTable').innerHTML = html;
     
-    // Добавляем обработчики для всплывающих подсказок (на все таланты)
     document.querySelectorAll('#talentTable .talent-cell').forEach(cell => {
         const talentId = parseInt(cell.dataset.talentId);
         if (talentId) {
@@ -1662,10 +1760,8 @@ function renderTalentTree(hero, selections, mode) {
         }
     });
     
-    // Добавляем обработчики кликов только для доступных талантов в ручном режиме
     if (isManual) {
         document.querySelectorAll('#talentTable .talent-cell.selectable').forEach(cell => {
-            // Убираем обработчик если ячейка отключена
             if (cell.dataset.disabled === 'true') {
                 cell.style.opacity = '0.5';
                 cell.style.cursor = 'not-allowed';
@@ -1681,7 +1777,6 @@ function renderTalentTree(hero, selections, mode) {
                 
                 if (!groupId || !side) return;
                 
-                // Проверяем, можно ли выбрать эту группу (не пропущена ли предыдущая)
                 let allPreviousSelected = true;
                 for (let i = 0; i < groupIdx; i++) {
                     const prevGroupId = groups[i][0].branchGroup;
@@ -1692,7 +1787,6 @@ function renderTalentTree(hero, selections, mode) {
                 }
                 
                 if (!allPreviousSelected) {
-                    // Показываем уведомление, что нужно сначала выбрать предыдущие таланты
                     const msg = document.createElement('div');
                     msg.textContent = '⚠️ Сначала выберите таланты в предыдущих строках!';
                     msg.style.position = 'fixed';
@@ -1711,7 +1805,6 @@ function renderTalentTree(hero, selections, mode) {
                     return;
                 }
                 
-                // Деактивируем все ячейки в этой группе
                 const groupCells = document.querySelectorAll(`#talentTable .talent-cell[data-group="${groupId}"]`);
                 groupCells.forEach(c => {
                     if (!c.classList.contains('mandatory')) {
@@ -1725,13 +1818,11 @@ function renderTalentTree(hero, selections, mode) {
                     }
                 });
                 
-                // Активируем выбранную ветку
                 const newImgUrl = getTalentImage(talentId, true);
                 const img = cell.querySelector('img');
                 if (img && newImgUrl) img.src = newImgUrl;
                 cell.classList.add('active');
                 
-                // Активируем все ячейки той же ветки в этой группе
                 const sameSideCells = document.querySelectorAll(`#talentTable .talent-cell[data-group="${groupId}"][data-side="${side}"]`);
                 sameSideCells.forEach(c => {
                     if (!c.classList.contains('mandatory')) {
@@ -1745,17 +1836,14 @@ function renderTalentTree(hero, selections, mode) {
                     }
                 });
                 
-                // Обновляем selection
                 currentHeroTalents[groupId] = side;
                 
-                // Обновляем характеристики в основном окне
                 const heroData = viewHeroes[currentIdx];
                 if (heroData) {
-                    const calc = calculateStatsWithSelections(heroData, currentHeroTalents);
+                    const calc = calculateStatsWithSelections(heroData, currentHeroTalents, currentMode);
                     document.getElementById('mStats').innerHTML = '<span class="pill">С: ' + heroData[HERO_FIELDS.power] + '</span><span class="pill">А: ' + calc.attack + '</span><span class="pill">З: ' + calc.defense + '</span><span class="pill">Ж: ' + calc.hp + '</span>';
                 }
                 
-                // Перерисовываем дерево, чтобы обновить доступность следующих групп
                 renderTalentTree(heroData, currentHeroTalents, currentMode);
             });
         });
@@ -1839,7 +1927,7 @@ function updateMainModalStats() {
     } else if (currentMode === 'manual') {
         selections = currentHeroTalents;
     }
-    const calc = calculateStatsWithSelections(hero, selections);
+    const calc = calculateStatsWithSelections(hero, selections, currentMode);
     document.getElementById('mStats').innerHTML = '<span class="pill">С: ' + hero[HERO_FIELDS.power] + '</span><span class="pill">А: ' + calc.attack + '</span><span class="pill">З: ' + calc.defense + '</span><span class="pill">Ж: ' + calc.hp + '</span>';
     if (document.getElementById('treePanel').classList.contains('show')) {
         renderTalentTree(hero, currentHeroTalents, currentMode);
@@ -1945,7 +2033,7 @@ function fillModal(hero) {
     document.getElementById('mMeta2').innerHTML = '<span>' + hero[HERO_FIELDS.attackType] + '</span> <span>' + hero[HERO_FIELDS.summon] + '</span> <span>' + hero[HERO_FIELDS.clazz] + '</span>';
     const container = document.getElementById('modalImageContainer');
     container.setAttribute('data-element', hero[HERO_FIELDS.element] || '');
-    const calc = calculateStatsWithSelections(hero, currentHeroTalents);
+    const calc = calculateStatsWithSelections(hero, currentHeroTalents, 'none');
     document.getElementById('mStats').innerHTML = '<span class="pill">С: ' + hero[HERO_FIELDS.power] + '</span><span class="pill">А: ' + calc.attack + '</span><span class="pill">З: ' + calc.defense + '</span><span class="pill">Ж: ' + calc.hp + '</span>';
     document.getElementById('mAbilities').textContent = String(hero[HERO_FIELDS.abilities] || '—').replace(/^'|'$/g, '');
     document.getElementById('mPassive').textContent = String(hero[HERO_FIELDS.passive] || '—').replace(/^'|'$/g, '');
@@ -1990,17 +2078,48 @@ function attachEvents() {
         initAllFacets(allHeroes);
         applyFilters();
     });
-    document.getElementById('applyFiltersBtn').addEventListener('click', () => { applyFilters(); document.getElementById('filters').classList.remove('show'); document.body.style.overflow = ''; });
-    document.getElementById('applyFiltersMobileBtn').addEventListener('click', () => { applyFilters(); document.getElementById('filters').classList.remove('show'); document.body.style.overflow = ''; });
+    
+    function openFiltersPanel() {
+        const headerHeight = document.querySelector('header').offsetHeight;
+        const filterPanel = document.querySelector('.filters .panel');
+        if (filterPanel) {
+            filterPanel.style.paddingTop = (headerHeight) + 'px';
+        }
+        document.getElementById('filters').classList.add('show');
+        document.getElementById('filterOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeFiltersPanel() {
+        document.getElementById('filters').classList.remove('show');
+        document.getElementById('filterOverlay').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    
+    function updateFilterPadding() {
+        if (document.getElementById('filters').classList.contains('show')) {
+            const headerHeight = document.querySelector('header').offsetHeight;
+            const filterPanel = document.querySelector('.filters .panel');
+            if (filterPanel) {
+                filterPanel.style.paddingTop = (headerHeight) + 'px';
+            }
+        }
+    }
+    
+    window.addEventListener('resize', updateFilterPadding);
+    
+    document.getElementById('openFilters').addEventListener('click', openFiltersPanel);
+    document.getElementById('applyFiltersBtn').addEventListener('click', () => { applyFilters(); closeFiltersPanel(); });
+    document.getElementById('applyFiltersMobileBtn').addEventListener('click', () => { applyFilters(); closeFiltersPanel(); });
+    document.getElementById('closeFilters').addEventListener('click', closeFiltersPanel);
+    document.getElementById('filterOverlay').addEventListener('click', closeFiltersPanel);
+    
     document.getElementById('cards').addEventListener('click', e => { if(e.target.classList.contains('toggle-abilities')) return; let card = e.target.closest('.card'); if(card) openModal(Number(card.dataset.idx)); });
     document.getElementById('mClose').addEventListener('click', closeModal);
     document.getElementById('mPrev').addEventListener('click', () => go(-1));
     document.getElementById('mNext').addEventListener('click', () => go(1));
     document.getElementById('modal').addEventListener('click', e => { if(e.target === document.getElementById('modal')) closeModal(); });
     window.addEventListener('keydown', e => { if(!document.getElementById('modal').classList.contains('show')) return; if(e.key === 'Escape') closeModal(); if(e.key === 'ArrowLeft') go(-1); if(e.key === 'ArrowRight') go(1); if(e.key === 'Escape' && document.getElementById('treePanel').classList.contains('show')) closeTreePanel(); });
-    document.getElementById('openFilters').addEventListener('click', () => { document.getElementById('filters').classList.add('show'); document.body.style.overflow = 'hidden'; });
-    document.getElementById('closeFilters').addEventListener('click', () => { document.getElementById('filters').classList.remove('show'); document.body.style.overflow = ''; });
-    document.getElementById('filters').addEventListener('click', e => { if(e.target === document.getElementById('filters')) { document.getElementById('filters').classList.remove('show'); document.body.style.overflow = ''; } });
     document.getElementById('infoBtn').addEventListener('click', () => { document.getElementById('infoModal').classList.add('show'); document.body.style.overflow = 'hidden'; });
     document.getElementById('infoClose').addEventListener('click', () => { document.getElementById('infoModal').classList.remove('show'); document.body.style.overflow = ''; });
     document.getElementById('infoModal').addEventListener('click', e => { if(e.target === document.getElementById('infoModal')) { document.getElementById('infoModal').classList.remove('show'); document.body.style.overflow = ''; } });
