@@ -1,0 +1,70 @@
+name: Оптимизация изображений
+
+on:
+  push:
+    paths:
+      - 'heroes.csv'
+      - 'item_images.csv'
+      - 'Talent_description.csv'
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pillow
+
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick webp
+
+      - name: Create cache directory
+        run: |
+          mkdir -p images_cache
+          echo "📁 Папка images_cache создана"
+
+      - name: Check CSV files exist
+        run: |
+          echo "📁 Проверяем наличие CSV файлов:"
+          ls -la *.csv || echo "❌ Нет CSV файлов!"
+
+      - name: Check script exists
+        run: |
+          echo "📁 Проверяем скрипт:"
+          ls -la scripts/download_images.py || echo "❌ Скрипт не найден!"
+
+      - name: Download and optimize images
+        run: |
+          echo "🚀 Запускаем скрипт..."
+          python scripts/download_images.py
+
+      - name: Commit optimized images
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add images_cache/ --force
+          git status
+          if git diff --staged --quiet; then
+            echo "📭 Нет изменений для коммита"
+          else
+            git commit -m "🖼️ Добавлены оптимизированные изображения"
+            git push
+          fi
