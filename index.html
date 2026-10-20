@@ -3636,52 +3636,36 @@ function attachEvents(){
 
 Promise.all([
     new Promise((res,rej)=>Papa.parse(DATA_URL,{download:true,header:true,skipEmptyLines:true,complete:r=>{ 
-        let maxDate = null;
-        let maxDateStr = '';
-        
-        allHeroes = r.data.filter(row => row && row[HERO_FIELDS.name]).map(row => { 
-            const tagsStr = row['Теги'] || ''; 
-            const tags = tagsStr.split(',').map(t => t.trim()).filter(t => t !== ''); 
-            
-            // Ищем самую позднюю дату обновления
-            const dateStr = (row['Дата обновления'] || '').trim();
-            if (dateStr) {
-                let parsedDate = null;
-                
-                // Формат DD/MM/YYYY
-                const ddmmyyyy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                if (ddmmyyyy) {
-                    const [, day, month, year] = ddmmyyyy;
-                    parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                }
-                
-                // Формат YYYY-MM-DD
-                const yyyymmdd = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-                if (yyyymmdd && !parsedDate) {
-                    const [, year, month, day] = yyyymmdd;
-                    parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                }
-                
-                if (parsedDate && !isNaN(parsedDate.getTime())) {
-                    if (!maxDate || parsedDate > maxDate) {
-                        maxDate = parsedDate;
-                        maxDateStr = dateStr;
-                    }
-                }
+        allHeroes=r.data.filter(row=>row&&row[HERO_FIELDS.name]).map(row=>{ 
+            const tagsStr=row['Теги']||''; 
+            const tags=tagsStr.split(',').map(t=>t.trim()).filter(t=>t!==''); 
+            if (row['Дата обновления'] && row['Дата обновления'].trim()) {
+                dbUpdateDate = row['Дата обновления'].trim();
             }
-            
-            return {...row, _tags: tags};
+            return {...row,_tags:tags};
         }); 
-        
-        if (maxDateStr) {
-            dbUpdateDate = maxDateStr;
-        }
-        
-        console.log('✅ Герои загружены:', allHeroes.length); 
-        console.log('📅 Последняя дата обновления:', dbUpdateDate || 'не найдена');
+        console.log('✅ Герои загружены:',allHeroes.length); 
         res(); 
     },error:rej})),
-  new Promise((res,rej)=>Papa.parse(TALENT_DESC_URL,{download:true,header:true,skipEmptyLines:true,complete:r=>{ 
+    new Promise((res,rej)=>Papa.parse(CLASSES_URL,{download:true,header:true,skipEmptyLines:true,complete:r=>{ 
+        r.data.forEach(row=>{ 
+            if(!row[CLASS_TALENT_FIELDS.class_id]) return; 
+            let cn=row[CLASS_TALENT_FIELDS.class_id]; 
+            if(!classTalents[cn]) classTalents[cn]=[]; 
+            classTalents[cn].push({ 
+                rowNumber:parseInt(row[CLASS_TALENT_FIELDS.row_number])||0, 
+                isMandatory:String(row[CLASS_TALENT_FIELDS.is_mandatory]).toLowerCase()==='true', 
+                branchGroup:row[CLASS_TALENT_FIELDS.branch_group], 
+                leftTalentId:row[CLASS_TALENT_FIELDS.left_talent_id]?parseInt(row[CLASS_TALENT_FIELDS.left_talent_id]):null, 
+                centerTalentId:row[CLASS_TALENT_FIELDS.center_talent_id]?parseInt(row[CLASS_TALENT_FIELDS.center_talent_id]):null, 
+                rightTalentId:row[CLASS_TALENT_FIELDS.right_talent_id]?parseInt(row[CLASS_TALENT_FIELDS.right_talent_id]):null 
+            }); 
+        }); 
+        Object.keys(classTalents).forEach(cn=>classTalents[cn].sort((a,b)=>a.rowNumber-b.rowNumber)); 
+        console.log('✅ Классы с талантами загружены:',Object.keys(classTalents).length); 
+        res(); 
+    },error:rej})),
+    new Promise((res,rej)=>Papa.parse(TALENT_DESC_URL,{download:true,header:true,skipEmptyLines:true,complete:r=>{ 
         console.log('📥 Загружено строк из Talent_description:',r.data.length); 
         talentDescriptions=[]; 
         r.data.forEach(row=>{ 
